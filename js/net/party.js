@@ -44,7 +44,7 @@ const Party={fol:null,fs:[],own:null,rx0:0,tx0:0,pend:null,pendT:0,wait:0,sent:'
   if(this.pend){if(this.pend===from&&MY<from)this.pend=null;else return no('相手も合流を申し込み中です。少し待ってください')}if(!G||scr!=='game'||!['field','combat','reward'].includes(G.phase))return no('相手は冒険中ではありません');
   if(byId(from))return this.send(true);if(G.players.length>=CFG.maxPlayers)return no('パーティーは'+CFG.maxPlayers+'人までです');if(!this.okP(m.p))return no('データが正しくありません');
   const mb=Net.members().find(x=>x.pid===from),q=m.p,ps=(n,d)=>typeof n==='number'&&isFinite(n)?n:d;
-  const p={id:from,side:'p',net:1,name:String(mb?mb.name:q.name||'仲間').slice(0,10),ch:q.ch,w:q.w,eq:q.eq.slice(0,4),g:q.g,rm:ps(q.rm,1),gfx:q.gfx&&typeof q.gfx==='object'?q.gfx:null,
+  const p={id:from,side:'p',net:1,name:String(mb?mb.name:q.name||'仲間').slice(0,10),ch:q.ch,w:q.w,eq:q.eq.slice(0,4),g:q.g,rm:ps(q.rm,1),gfx:q.gfx&&typeof q.gfx==='object'?q.gfx:null,apas:q.apas&&typeof q.apas==='object'?q.apas:null,
    deck:q.deck.map(c=>({u:++G.uid,id:c.id,up:c.up?1:0,src:EQ[c.src]?c.src:undefined})),mhp:ps(q.mhp,1),mps:ps(q.mps,1),hp:0,ps:0,conn:true,en:0,blk:0,st:{},x:0,y:0,f:1,mp:0,moved:false,broken:false,down:false,out:false,downT:0,resc:null,ended:true,done:true,rw:[],hand:[],draw:[],disc:[],exh:[]};
   p.hp=Math.max(1,Math.min(maxHp(p),Math.round(q.hp)));p.ps=p.mps;
   if(G.phase==='combat'){const N=CFG.grid,ys=[3,4,2,5,1,6,0,7];let c=null;for(let x=0;x<2&&!c;x++)for(const y of ys)if(!TER[terAt(x,y)].block&&!unitAt(x,y)){c=[x,y];break}

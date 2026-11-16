@@ -7,9 +7,11 @@ function ensureWorld(){const w=G.world;if(!w.pl)w.pl={};if(!w.share)w.share={};
 function plOf(id){const w=ensureWorld(),o=ownerId(id);
  if(!w.pl[o]){const pl=w.pl[o]={store:{},gear:[],gu:0};CFG.startWeapons.forEach(i=>pl.gear.push({u:++pl.gu,id:i,r:0,fx:{}}));if(w.store){pl.store=w.store;delete w.store}}   // v0.2 の倉庫は個人倉庫へ引き継ぐ
  return w.pl[o]}
-function gearUsed(p,u){return G.players.some(q=>q!==p&&ownerId(q.id)===ownerId(p.id)&&q.g===u)}
-function gearOf(p){return plOf(p.id).gear.find(g=>g.u===p.g)||null}
-function gearFree(p){return plOf(p.id).gear.find(g=>!gearUsed(p,g.u))||null}
+function gearUsed(p,u){return G.players.some(q=>q!==p&&ownerId(q.id)===ownerId(p.id)&&(q.g===u||q.a===u))}
+function gearInUse(p,u){return G.players.some(q=>ownerId(q.id)===ownerId(p.id)&&(q.g===u||q.a===u))}
+function gearOf(p){return plOf(p.id).gear.find(g=>g.u===p.g&&EQ[g.id])||null}
+function gearFree(p){return plOf(p.id).gear.find(g=>EQ[g.id]&&!gearUsed(p,g.u))||null}
+function armorOf(p){return p.a?plOf(p.id).gear.find(g=>g.u===p.a&&ARM[g.id])||null:null}   // 装備している防具（なければ null）
 function facLv(id){return G.world.base.fac[id]||0}
 function hasTech(id){return !!(G.world.base&&G.world.base.tech[id])}
 function techFx(){const o={};if(!G.world.base)return o;for(const t in TECHFX)if(hasTech(t))for(const k in TECHFX[t])o[k]=(o[k]||0)+TECHFX[t][k];return o}
@@ -52,9 +54,9 @@ function shareOp(a){const w=ensureWorld(),b=w.base,sh=w.share;
 /* ---------- 拠点での行動（拠点にいる時だけ） ---------- */
 function baseAct(p,a){if(G.phase!=='prep')return '拠点でしかできません';const w=ensureWorld(),b=w.base,pl=plOf(p.id),sh=w.share;
  switch(a.t){
-  case 'equip':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearUsed(p,g.u))return '仲間が装備しています';p.g=g.u;setChar(p);return ''}
+  case 'equip':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearUsed(p,g.u))return '仲間が装備しています';if(ARM[g.id])p.a=p.a===g.u?0:g.u;else p.g=g.u;setChar(p);return ''}   // 防具は、もう一度押すと外す
   case 'donate':{const m=a.m,have=pl.store[m]||0,n=a.n==='all'?have:Math.min(a.n|0,have);if(!MAT[m]||n<=0)return '寄付できる素材がありません';pl.store[m]-=n;const o={t:'give',m,n};shareOp(o);HOOK.op(o);ev('donate',{m,n});return ''}
   case 'build':case 'research':case 'job':{const er=shareOp(a);if(!er)HOOK.op(a);return er}
   case 'craft':{const r=RECIPE[a.id];if(!r)return '';if(!hasTech(r.tech))return '研究「'+TECH[r.tech].n+'」が必要です';if(facLv('shop')<r.shop)return '工房Lv'+r.shop+'が必要です';if(pl.gear.length>=CFG.gearMax)return '装備がいっぱいです（いらない装備を手放してください）';if(!canPay(pl.store,r.cost))return '個人倉庫の素材が足りません';pay(pl.store,r.cost);const g=rollGear(a.id);g.u=++pl.gu;pl.gear.push(g);ev('craft',{id:g.id,r:g.r});return ''}
-  case 'scrap':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(G.players.some(q=>ownerId(q.id)===ownerId(p.id)&&q.g===g.u))return '装備中の物は手放せません';pl.gear=pl.gear.filter(x=>x!==g);return ''}}
+  case 'scrap':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearInUse(p,g.u))return '装備中の物は手放せません';pl.gear=pl.gear.filter(x=>x!==g);return ''}}
  return ''}

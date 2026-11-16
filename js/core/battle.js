@@ -15,13 +15,14 @@ function addPlayer(id,name){if(byId(id))return byId(id);if(G.players.length>=CFG
  G.players.push(p);setChar(p);return p}
 function removePlayer(id){G.players=G.players.filter(p=>p.id!==id)}
 function cinst(id,src){const c={u:++G.uid,id,up:0};if(src)c.src=src;return c}
-function setChar(p){const ch=CH[p.ch],g=gearOf(p)||gearFree(p);if(g){p.g=g.u;p.w=g.id;p.rm=RAR[g.r].m;p.gfx=g.fx}   // 装備（製作した実物）から武器・レアリティ倍率・追加効果を決める
- p.mhp=ch.hp;p.mps=ch.ps;p.eq=[p.w];p.deck=[cinst('punch'),cinst('guard'),cinst('guard'),cinst('step')];EQ[p.w].cards.forEach(id=>p.deck.push(cinst(id,p.w)));ch.extra.forEach(id=>p.deck.push(cinst(id)));
+function setChar(p){const ch=CH[p.ch],g=gearOf(p)||gearFree(p);if(g){p.g=g.u;p.w=g.id;p.rm=RAR[g.r].m;p.gfx=g.fx}
+ const ar=armorOf(p);p.apas=null;if(ar){const s=armStat(ar),o=Object.assign({},ar.fx||{});o.maxhp=(o.maxhp||0)+s.hp;o.dmgRed=(o.dmgRed||0)+s.red;o.move=(o.move||0)+s.mv;o.aps=s.ps;p.apas=o}else p.a=0;   // 防具の性能と追加効果   // 装備（製作した実物）から武器・レアリティ倍率・追加効果を決める
+ p.mhp=ch.hp;p.mps=ch.ps+(p.apas?p.apas.aps:0);p.eq=[p.w];p.deck=[cinst('punch'),cinst('guard'),cinst('guard'),cinst('step')];EQ[p.w].cards.forEach(id=>p.deck.push(cinst(id,p.w)));ch.extra.forEach(id=>p.deck.push(cinst(id)));
  p.hp=maxHp(p);p.ps=p.mps;p.down=false;p.out=false;p.broken=false;p.rw=[];p.st={};p.blk=0;p.hand=[];p.draw=[];p.disc=[];p.exh=[]}
 function setWeapon(p,w){const old=p.w;let ups=p.deck.filter(c=>c.src===old&&c.up).length;const at=Math.max(0,p.deck.findIndex(c=>c.src===old));p.deck=p.deck.filter(c=>c.src!==old);
  p.deck.splice(at,0,...EQ[w].cards.map(id=>{const c=cinst(id,w);if(ups>0){c.up=1;ups--}return c}));p.w=w;p.eq=p.eq.map(i=>i===old?w:i)}
 /* ---------- パッシブ集計 ---------- */
-function pasList(p){const l=p.eq.map(i=>EQ[i].pas);if(CH[p.ch])l.push(CH[p.ch].pas);if(p.gfx)l.push(p.gfx);l.push(techFx());return l}
+function pasList(p){const l=p.eq.map(i=>EQ[i].pas);if(CH[p.ch])l.push(CH[p.ch].pas);if(p.gfx)l.push(p.gfx);if(p.apas)l.push(p.apas);l.push(techFx());return l}
 function pstat(p,k){let v=0;pasList(p).forEach(s=>{if(s&&s[k])v+=s[k]});return v}
 function maxHp(p){return Math.max(1,p.mhp+pstat(p,'maxhp'))}
 /* ---------- 盤面 ---------- */
@@ -108,7 +109,7 @@ function startPlayerPhase(){const cb=G.cb;cb.turn++;cb.ph='p';
  G.players.forEach(p=>{if(p.resc==null)return;const t=byId(p.resc);p.resc=null;if(!p.down&&t&&t.down&&!t.out){log(p.name+'が'+t.name+'を救助した！');reviveP(t,CFG.rescuePct)}});
  G.players.forEach(p=>{if(p.down&&!p.out){p.downT++;if(p.downT>CFG.rescueTurns||alivePs().length===0){p.out=true;log(p.name+'は拠点へ強制帰還した…');ev('out',{p:p.id})}}});
  aliveEs().forEach(e=>{e.hitBy=[];pickIntent(e)});
- G.players.forEach(p=>{if(p.down||p.out){p.ended=true;return}p.ended=false;p.moved=false;p.mp=CFG.moveMp+pstat(p,'move');p.blk=pstat(p,'blockStart')+(cb.turn===1?pstat(p,'firstBlock'):0);p.st.taunt=0;p.st.evade=cb.turn===1?pstat(p,'evadeStart'):0;if(cb.turn===1)p.st.str=pstat(p,'strStart');
+ G.players.forEach(p=>{if(p.down||p.out){p.ended=true;return}p.ended=false;p.moved=false;p.mp=Math.max(1,CFG.moveMp+pstat(p,'move'));p.blk=pstat(p,'blockStart')+(cb.turn===1?pstat(p,'firstBlock'):0);p.st.taunt=0;p.st.evade=cb.turn===1?pstat(p,'evadeStart'):0;if(cb.turn===1)p.st.str=pstat(p,'strStart');
   if(p.broken){p.broken=false;p.ps=p.mps;p.en=0;p.ended=true;log(p.name+'は体勢を立て直している（1回休み）');ev('skip',{p:p.id});return}
   if(terAt(p.x,p.y)!=='w')p.ps=Math.min(p.mps,p.ps+Math.ceil(p.mps*CFG.psRegen));
   p.en=CFG.energy+pstat(p,'energy')+(cb.turn===1?pstat(p,'energyFirst'):0);drawCards(p,CFG.handSize+pstat(p,'draw')+(cb.turn===1?pstat(p,'drawFirst'):0))});

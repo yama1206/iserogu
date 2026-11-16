@@ -17,8 +17,12 @@ function matesH(){const ms=mates();if(!ms.length)return '';return `<div class="b
 function tGo(){const p=me(),ch=CH[p.ch],w=EQ[p.w],pl=plOf(p.id),g=gearOf(p);
  return `${matesH()}${partyH()}<div class="row">${G.players.length<2?btn('addp','＋ 仲間を連れていく（2人を1人で操作）',{c:'sm'}):btn('rmp','－ 仲間を外す',{c:'sm'})}</div>
  <div class="box col"><div class="hd">キャラクター${G.players.length>1?'（'+esc(p.name)+'）':''}</div><div class="chs">${CHARS.map(c=>`<button class="btn f chb ${p.ch===c.id?'on':''}" data-a="char" data-i="${c.id}"><div class="pe">${c.em}</div>${c.n}<div class="small">HP${c.hp}・体勢${c.ps}</div></button>`).join('')}</div><div class="small" style="text-align:center">${ch.d}<br>初期カード：${countNames(ch.extra)}</div></div>
- <div class="box col"><div class="hd">装備する武器</div><div class="chs">${pl.gear.map(x=>`<button class="btn f chb ${p.g===x.u?'on':''} ${gearUsed(p,x.u)?'dim':''}" data-a="equip" data-i="${x.u}"><div class="pe">${EQ[x.id].em}</div>${EQ[x.id].n}<div class="small" style="color:${RAR[x.r].c}">${RAR[x.r].n}</div></button>`).join('')}</div><div class="small" style="text-align:center">${g?gearFxH(g)+'<br>':''}${wInfo(w)}</div></div>
+ <div class="box col"><div class="hd">装備する武器</div><div class="chs">${pl.gear.filter(x=>EQ[x.id]).map(x=>`<button class="btn f chb ${p.g===x.u?'on':''} ${gearUsed(p,x.u)?'dim':''}" data-a="equip" data-i="${x.u}"><div class="pe">${EQ[x.id].em}</div>${EQ[x.id].n}<div class="small" style="color:${RAR[x.r].c}">${RAR[x.r].n}</div></button>`).join('')}</div><div class="small" style="text-align:center">${g?gearFxH(g)+'<br>':''}${wInfo(w)}</div></div>
+ ${armSelH(p,pl)}
  ${outs().length?`<div class="box col"><div class="hd">出発する場所</div><div class="row">${btn('start','🛖 拠点から出発',{c:'pri',i:-1,y:1})}</div>${outs().map((_,i)=>`<div class="row">${btn('start',outName(i)+'から',{i})}</div>`).join('')}</div>`:`<div class="row">${btn('start','冒険へ出発',{c:'pri',y:1})}</div>`}`}
+// 防具を選ぶ（もう一度押すと外す）
+function armSelH(p,pl){const as=pl.gear.filter(x=>ARM[x.id]),a=armorOf(p);
+ return `<div class="box col"><div class="hd">装備する防具</div>${as.length?`<div class="chs"><button class="btn f chb ${a?'':'on'}" data-a="unarm"><div class="pe">👕</div>なし</button>${as.map(x=>`<button class="btn f chb ${p.a===x.u?'on':''} ${gearUsed(p,x.u)?'dim':''}" data-a="equip" data-i="${x.u}"><div class="pe">${ARM[x.id].em}</div>${ARM[x.id].n}<div class="small" style="color:${RAR[x.r].c}">${RAR[x.r].n}</div></button>`).join('')}</div><div class="small" style="text-align:center">${a?gearFxH(a)+'<br>'+armInfo(a)+'<br>'+ARM[a.id].d:'防具なし'}</div>`:'<div class="small" style="text-align:center">まだ防具がありません。研究「編み物」をして、工房で製作しましょう。</div>'}</div>`}
 /* ---------- 倉庫 ---------- */
 function tStore(){const pl=plOf(MY),sh=G.world.share,ks=Object.keys(MAT).filter(m=>(pl.store[m]||0)>0),b=G.world.base;
  return `<div class="box col"><div class="hd">個人倉庫</div><div class="small">冒険で持ち帰った素材。武器の製作に使います。</div>
@@ -40,11 +44,11 @@ function tTech(){const b=G.world.base,sh=G.world.share,a=jobAlloc(),keys=Object.
 /* ---------- 製作 ---------- */
 function tCraft(){const p=me(),pl=plOf(p.id),lv=facLv('shop'),od=rarOdds();let h='';
  if(!lv)h+='<div class="box small" style="text-align:center">製作するには、まず建築タブで「🔨工房」を建ててください。</div>';
- h+=`<div class="box col"><div class="hd">武器の製作${lv?'（工房Lv'+lv+'）':''}</div><div class="small">${RAR.map((r,i)=>`<span style="color:${r.c}">${r.n}${(od[i]*100).toFixed(od[i]<.1?1:0)}%</span>`).join(' ')}</div>
- ${Object.keys(RECIPE).map(id=>{const r=RECIPE[id],e=EQ[id],nt=!hasTech(r.tech),ns=lv<r.shop;
-  return `<div class="it"><div class="tx"><b>${e.em}${e.n}</b><br><span class="small">${wInfo(e).split('<br>')[0]}<br>${costH(r.cost,pl.store)}${nt?`　<span class="ng">研究「${TECH[r.tech].n}」が必要</span>`:''}${ns?`　<span class="ng">工房Lv${r.shop}が必要</span>`:''}</span></div>${btn('craft','製作',{i:id,c:'sm '+(nt||ns||!canPay(pl.store,r.cost)?'dim':'pri')})}</div>`}).join('')}</div>
- <div class="box col"><div class="hd">持っている装備（${pl.gear.length}/${CFG.gearMax}）</div>${pl.gear.map(g=>{const eq=G.players.some(q=>ownerId(q.id)===ownerId(p.id)&&q.g===g.u);
-  return `<div class="it"><div class="tx"><b>${EQ[g.id].em}${EQ[g.id].n}</b> ${gearFxH(g)}${eq?' <span class="small">（装備中）</span>':''}</div>${eq?'':btn('scrap','手放す',{i:g.u,c:'sm'})}</div>`}).join('')}</div>
+ h+=`<div class="box small" style="text-align:center">レアリティの出やすさ${lv?'（工房Lv'+lv+'）':''}：${RAR.map((r,i)=>`<span style="color:${r.c}">${r.n}${(od[i]*100).toFixed(od[i]<.1?1:0)}%</span>`).join(' ')}</div>
+ ${[['武器の製作',id=>EQ[id]],['防具の製作',id=>ARM[id]]].map(([hd,ok])=>`<div class="box col"><div class="hd">${hd}</div>${Object.keys(RECIPE).filter(ok).map(id=>{const r=RECIPE[id],e=itemOf(id),nt=!hasTech(r.tech),ns=lv<r.shop;
+  return `<div class="it"><div class="tx"><b>${e.em}${e.n}</b><br><span class="small">${EQ[id]?wInfo(e).split('<br>')[0]:armInfo({id,r:0})+'（コモン）'}<br>${costH(r.cost,pl.store)}${nt?`　<span class="ng">研究「${TECH[r.tech].n}」が必要</span>`:''}${ns?`　<span class="ng">工房Lv${r.shop}が必要</span>`:''}</span></div>${btn('craft','製作',{i:id,c:'sm '+(nt||ns||!canPay(pl.store,r.cost)?'dim':'pri')})}</div>`}).join('')}</div>`).join('')}
+ <div class="box col"><div class="hd">持っている装備（${pl.gear.length}/${CFG.gearMax}）</div>${pl.gear.map(g=>{const eq=gearInUse(p,g.u);
+  return `<div class="it"><div class="tx"><b>${itemOf(g.id).em}${itemOf(g.id).n}</b> ${gearFxH(g)}${ARM[g.id]?'<br><span class="small">'+armInfo(g)+'</span>':''}${eq?' <span class="small">（装備中）</span>':''}</div>${eq?'':btn('scrap','手放す',{i:g.u,c:'sm'})}</div>`}).join('')}</div>
  <div class="small">素材は個人倉庫から使います。装備の変更は「出発」タブで。</div>`;return h}
 /* ---------- 住民 ---------- */
 function tPeople(){const b=G.world.base,a=jobAlloc(),un={farm:'食料',lumber:'木材',mine:'石',research:'研究ポイント',build:'作業'};
@@ -52,7 +56,7 @@ function tPeople(){const b=G.world.base,a=jobAlloc(),un={farm:'食料',lumber:'�
  <div class="box col"><div class="hd">仕事の優先度</div><div class="small">優先度を決めると、住民が自動で配置されます。</div>
  ${Object.keys(JOBS).map(j=>{const J=JOBS[j],act=jobActive(j);return `<div class="it"><div class="tx"><b>${J.em}${J.n}</b> ${a[j]}人<br><span class="small">${J.d}${act?(a[j]?`（1時間に${un[j]}+${+jobRate(j,a[j]).toFixed(1)}）`:''):'（今はすることがありません）'}</span></div>${PRIO.map((n,v)=>btn('job',n,{i:j+':'+v,c:'sm '+((b.job[j]||0)===v?'on':'')})).join('')}</div>`}).join('')}</div>`}
 Object.assign(ACT,{
- tab(i){ui.tab=i},equip(i){sendAct({t:'equip',g:+i})},
+ tab(i){ui.tab=i},equip(i){sendAct({t:'equip',g:+i})},unarm(){const p=me();if(p&&p.a)sendAct({t:'equip',g:p.a})},
  donate(i){const [m,n]=i.split(':');sendAct({t:'donate',m,n:n==='all'?'all':+n})},
  build(i){sendAct({t:'build',id:i})},research(i){sendAct({t:'research',id:i})},craft(i){sendAct({t:'craft',id:i})},scrap(i){sendAct({t:'scrap',g:+i})},
  job(i){const [j,v]=i.split(':');sendAct({t:'job',j,v:+v})}});
