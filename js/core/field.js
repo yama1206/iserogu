@@ -4,7 +4,7 @@
 let WORLD=null;
 function hsh(x,y,s){let h=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(s,2246822519)|0;h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return (h>>>0)/4294967296}
 function vnoise(x,y,s){const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,u=fx*fx*(3-2*fx),w=fy*fy*(3-2*fy),a=hsh(xi,yi,s),b=hsh(xi+1,yi,s),c=hsh(xi,yi+1,s),d=hsh(xi+1,yi+1,s);return a+(b-a)*u+(c-a)*w+(a-b-c+d)*u*w}
-function newWorld(){return {v:1,seed:R(1e9)+1,seen:[],store:{},sv:0}}
+function newWorld(){return {v:2,seed:R(1e9)+1,seen:[],sv:0}}
 // フィールドの地形：p平地 f森の地面 h丘 ＝歩ける ／ t木 r岩 w水 ＝通れない
 function genWorld(seed){if(WORLD&&WORLD.seed===seed)return WORLD;const N=CFG.worldN,c=N>>1,far=(x,y)=>Math.max(Math.abs(x-c),Math.abs(y-c));
  for(let salt=0;salt<30;salt++){const s=(seed+salt*7919)|0,t=[],reg=[];
@@ -27,7 +27,7 @@ function fhit(x,y){const r=.28;return fblock(x-r,y-r)||fblock(x+r,y-r)||fblock(x
 function seenAt(x,y){return !!G.world.seen[(y>>2)*(CFG.worldN>>2)+(x>>2)]}
 // 地図：4×4マスの区画ごとに「発見済み」にする
 function reveal(){const fd=G.fd,se=G.world.seen,B=CFG.worldN>>2;let ch=false;for(let by=0;by<B;by++)for(let bx=0;bx<B;bx++){const i=by*B+bx;if(!se[i]&&Math.hypot(bx*4+2-fd.x,by*4+2-fd.y)<=CFG.sight){se[i]=1;ch=true}}if(ch)G.world.sv=(G.world.sv||0)+1;return ch}
-function fieldStart(){const W=genWorld(G.world.seed),B=CFG.worldN>>2;if(!Array.isArray(G.world.seen)||G.world.seen.length!==B*B)G.world.seen=Array(B*B).fill(0);if(!G.world.store)G.world.store={};
+function fieldStart(){const W=genWorld(G.world.seed),B=CFG.worldN>>2;if(!Array.isArray(G.world.seen)||G.world.seen.length!==B*B)G.world.seen=Array(B*B).fill(0);
  G.fd={x:W.c+.5,y:W.c+1.5,fl:false,bk:false,steps:0,enc:CFG.encBase,grace:CFG.encGrace,bag:{},taken:{},dead:{},wins:0,home:null,lost:null};G.cb=null;G.phase='field';reveal();log('冒険に出発した。');ev('fstart')}
 function addBag(m,n){G.fd.bag[m]=(G.fd.bag[m]||0)+n}
 function fieldEnc(st){G.fd.enc=CFG.encBase;ev('enc');startCombat(st)}
@@ -47,5 +47,5 @@ function fieldNear(){const fd=G.fd,W=WORLD;if(!fd||!W)return null;let best=null,
  for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++){const key=x+','+y,m=W.nodes[key];if(!m||fd.taken[key])continue;const d=Math.hypot(x+.5-fd.x,y+.5-fd.y);if(d<bd){bd=d;best={key,m}}}return best}
 function fieldGather(){const n=fieldNear();if(!n)return '近くに採集できる物がありません';const c=rng(CFG.gatherN[0],CFG.gatherN[1]);G.fd.taken[n.key]=1;addBag(n.m,c);ev('gather',{m:n.m,n:c});return ''}
 // 荷物を倉庫へ（rate＝失う割合。強制帰還のとき）
-function bagHome(rate){const fd=G.fd,st=G.world.store;fd.home={};fd.lost={};for(const m in fd.bag){const n=fd.bag[m],l=Math.round(n*rate);if(l)fd.lost[m]=l;if(n-l>0){fd.home[m]=n-l;st[m]=(st[m]||0)+n-l}}fd.bag={}}
-function fieldReturn(){if(G.phase!=='field')return '今は帰還できません';bagHome(0);G.phase='home';log('拠点に帰還した。');ev('ret');return ''}
+function bagHome(rate){const fd=G.fd,st=plOf(G.players[0].id).store;fd.home={};fd.lost={};for(const m in fd.bag){const n=fd.bag[m],l=Math.round(n*rate);if(l)fd.lost[m]=l;if(n-l>0){fd.home[m]=n-l;st[m]=(st[m]||0)+n-l}}fd.bag={}}
+function fieldReturn(){if(G.phase!=='field')return '今は帰還できません';bagHome(0);G.phase='home';log('拠点に帰還した。荷物を個人倉庫に入れた。');ev('ret');return ''}

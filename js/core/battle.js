@@ -6,7 +6,7 @@ let G=null;
 const HOOK={sched:(f,ms)=>setTimeout(f,ms),changed:()=>{}};
 // 向き：0=奥 1=右 2=手前 3=左（マス座標は x=左→右、y=奥→手前）
 const DIR=[[0,-1],[1,0],[0,1],[-1,0]],DIRN=['奥','右','手前','左'],RELN={front:'正面',side:'側面',back:'背後'};
-function newGame(world){G={v:2,phase:'prep',players:[],cb:null,fd:null,world:world&&world.seed?world:newWorld(),log:[],evs:[],evn:0,uid:0};return G}
+function newGame(world){G={v:2,phase:'prep',players:[],cb:null,fd:null,world:world&&world.seed?world:newWorld(),log:[],evs:[],evn:0,uid:0};ensureWorld();return G}
 function byId(id){return G.players.find(p=>p.id===id)}
 function log(m){G.log.push(m);if(G.log.length>30)G.log.shift()}
 function ev(k,o){G.evs.push(Object.assign({i:++G.evn,k},o||{}));if(G.evs.length>60)G.evs.shift()}
@@ -15,12 +15,13 @@ function addPlayer(id,name){if(byId(id))return byId(id);if(G.players.length>=CFG
  G.players.push(p);setChar(p);return p}
 function removePlayer(id){G.players=G.players.filter(p=>p.id!==id)}
 function cinst(id,src){const c={u:++G.uid,id,up:0};if(src)c.src=src;return c}
-function setChar(p){const ch=CH[p.ch];p.mhp=ch.hp;p.mps=ch.ps;p.eq=[p.w];p.deck=[cinst('punch'),cinst('guard'),cinst('guard'),cinst('step')];EQ[p.w].cards.forEach(id=>p.deck.push(cinst(id,p.w)));ch.extra.forEach(id=>p.deck.push(cinst(id)));
+function setChar(p){const ch=CH[p.ch],g=gearOf(p)||gearFree(p);if(g){p.g=g.u;p.w=g.id;p.rm=RAR[g.r].m;p.gfx=g.fx}   // 装備（製作した実物）から武器・レアリティ倍率・追加効果を決める
+ p.mhp=ch.hp;p.mps=ch.ps;p.eq=[p.w];p.deck=[cinst('punch'),cinst('guard'),cinst('guard'),cinst('step')];EQ[p.w].cards.forEach(id=>p.deck.push(cinst(id,p.w)));ch.extra.forEach(id=>p.deck.push(cinst(id)));
  p.hp=maxHp(p);p.ps=p.mps;p.down=false;p.out=false;p.broken=false;p.rw=[];p.st={};p.blk=0;p.hand=[];p.draw=[];p.disc=[];p.exh=[]}
 function setWeapon(p,w){const old=p.w;let ups=p.deck.filter(c=>c.src===old&&c.up).length;const at=Math.max(0,p.deck.findIndex(c=>c.src===old));p.deck=p.deck.filter(c=>c.src!==old);
  p.deck.splice(at,0,...EQ[w].cards.map(id=>{const c=cinst(id,w);if(ups>0){c.up=1;ups--}return c}));p.w=w;p.eq=p.eq.map(i=>i===old?w:i)}
 /* ---------- パッシブ集計 ---------- */
-function pasList(p){const l=p.eq.map(i=>EQ[i].pas);if(CH[p.ch])l.push(CH[p.ch].pas);return l}
+function pasList(p){const l=p.eq.map(i=>EQ[i].pas);if(CH[p.ch])l.push(CH[p.ch].pas);if(p.gfx)l.push(p.gfx);l.push(techFx());return l}
 function pstat(p,k){let v=0;pasList(p).forEach(s=>{if(s&&s[k])v+=s[k]});return v}
 function maxHp(p){return Math.max(1,p.mhp+pstat(p,'maxhp'))}
 /* ---------- 盤面 ---------- */
@@ -65,8 +66,8 @@ function costOf(inst){return CARDS[inst.id].cost}
 function cardRg(p,inst){const c=CARDS[inst.id],w=wsrc(p,inst),wp=w?WPN[w.tags[0]]:WPN.none,ranged=!!(w&&w.ranged&&!c.rg);let rg=c.rg||(c.req?wp.rg:1);
  if(ranged&&p&&G&&G.cb&&terAt(p.x,p.y)==='h')rg+=CFG.hillRange;return {rg,ranged,pm:wp.pm*(c.pk||1)}}
 function inRange(p,t,ci){return dist(p,t)<=ci.rg&&(!ci.ranged||los(p.x,p.y,t.x,t.y))}
-function dmgOf(p,inst,f){let v=inst.up?upv(f[1]):f[1];if(!p)return v;const w=wsrc(p,inst);if(w)v+=Math.round(w.atk*(f[2]==null?1:f[2]));return v+pstat(p,'atk')+pstat(p,w&&w.ranged?'ranged':'melee')}
-function blkOf(p,inst,f){let v=inst.up?upv(f[1]):f[1];return p?v+Math.round(pstat(p,'blk')*(f[2]==null?1:f[2])):v}
+function dmgOf(p,inst,f){let v=inst.up?upv(f[1]):f[1];if(!p)return v;const w=wsrc(p,inst);if(w)v=Math.round((v+Math.round(w.atk*(f[2]==null?1:f[2])))*(p.rm||1));return v+pstat(p,'atk')+pstat(p,w&&w.ranged?'ranged':'melee')}
+function blkOf(p,inst,f){let v=inst.up?upv(f[1]):f[1];if(p&&wsrc(p,inst))v=Math.round(v*(p.rm||1));return p?v+Math.round(pstat(p,'blk')*(f[2]==null?1:f[2])):v}
 function healOf(p,inst,f){let v=inst.up?upv(f[1]):f[1];return p?v+pstat(p,'heal'):v}
 function stOf(p,inst,f){const c=CARDS[inst.id];let v=f[2]+(inst.up&&upKind(c)==='st'?1:0);if(p&&f[3]!=='s'&&f[3]!=='A'){if(f[1]==='bleed')v+=pstat(p,'bleedPlus');if(f[1]==='vuln')v+=pstat(p,'vulnPlus')}return v}
 function drOf(inst,f){return f[1]+(inst.up&&upKind(CARDS[inst.id])==='dr'?1:0)}
@@ -191,9 +192,9 @@ function skipEst(){const cb=G.cb,ps=G.players.filter(p=>p.hp>0);if(cb.kind!=='n'
 function skipCombat(){const cb=G.cb;if(G.phase!=='combat'||cb.ph!=='p'||!cb.skip||cb.turn!==1)return '今はスキップできません';const ps=alivePs(),d=Math.ceil(cb.skip.take/ps.length);
  ps.forEach(p=>{p.hp=Math.max(1,p.hp-d)});cb.en.forEach(e=>{e.hp=0});log('戦闘をスキップした（'+cb.skip.take+'ダメージを受けた）。');winCombat();return ''}
 function winCombat(){const cb=G.cb,st={k:cb.kind},fd=G.fd,got={};ev('win');
- G.players.forEach(p=>{if(p.down||p.out){p.down=false;p.out=false;p.hp=Math.max(1,Math.ceil(maxHp(p)*CFG.afterDownPct))}else p.hp=Math.min(maxHp(p),p.hp+Math.ceil(maxHp(p)*CFG.winHeal));
+ G.players.forEach(p=>{if(p.down||p.out){p.down=false;p.out=false;p.hp=Math.max(1,Math.ceil(maxHp(p)*CFG.afterDownPct))}else p.hp=Math.min(maxHp(p),p.hp+Math.ceil(maxHp(p)*winHealRate()));
   p.st={};p.blk=0;p.broken=false;p.ps=p.mps;p.resc=null;p.hand=[];p.draw=[];p.disc=[];p.exh=[];p.done=false;p.rw=[];
-  if(st.k==='e')p.rw.push({k:'w',o:shuf(CFG.eliteWeapons.filter(w=>w!==p.w)).slice(0,2),src:'強敵の戦利品'});if(st.k==='b')p.rw.push({k:'w',o:CFG.bossWeapons.filter(w=>w!==p.w),src:'ボスの戦利品'});p.rw.push({k:'card',o:rollCards(p,3)})});
+  p.rw.push({k:'card',o:rollCards(p,3)})});
  cb.en.forEach(e=>{const d=DROP[e.id];if(d&&Math.random()<d[2]){addBag(d[0],d[1]);got[d[0]]=(got[d[0]]||0)+d[1]}});if(Object.keys(got).length)ev('drop',{o:got});
  if(cb.fix!=null)fd.dead[cb.fix]=1;fd.wins++;fd.grace=CFG.encGrace;log('戦闘に勝利した！');G.cb=null;G.phase='reward'}
 // 敵の攻撃が届く範囲（行動予告の表示用）
@@ -204,7 +205,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
  if(a.t==='walk'){if(G.phase==='field'&&fieldWalk(a.dx,a.dy,a.dt))HOOK.changed();return ''}
  switch(a.t){
   case 'char':if(G.phase==='prep'&&CH[a.c]){p.ch=a.c;setChar(p)}break;
-  case 'weapon':if(G.phase==='prep'&&CFG.startWeapons.includes(a.w)){p.w=a.w;setChar(p)}break;
+  case 'equip':case 'donate':case 'build':case 'research':case 'craft':case 'scrap':case 'job':er=baseAct(p,a);break;
   case 'start':if(G.phase!=='prep')return '';startRun();break;
   case 'move':er=moveP(p,a.x,a.y);break;
   case 'face':er=canAct(p);if(!er&&a.f>=0&&a.f<4)p.f=a.f;break;

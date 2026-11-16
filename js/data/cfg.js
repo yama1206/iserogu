@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.2.1';
+const VERSION='0.3.0';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -31,7 +31,19 @@ const CFG={
  encFar:[9,18],    // 拠点からこの距離を超えると敵が1体ずつ増える
  eliteDist:14,eliteRate:.07, // 遠くでは通常の遭遇がまれに強敵になる
  nodeRate:.045,gatherN:[1,3],// 採集ポイントの多さ／1回で採れる数
- loseBag:.3        // 強制帰還で失う荷物の割合
+ loseBag:.3,       // 強制帰還で失う荷物の割合
+ // ---- 拠点（v0.3.0） ----
+ minPerSec:1,      // 現実1秒で進むゲーム内の分（1時間＝現実60秒）。世界を開いている間だけ進む
+ popStart:3,       // 最初の住民の数
+ jobPrio:{farm:2,lumber:1,mine:1,research:2,build:2}, // 仕事の優先度の初期値（0なし 1低 2中 3高）
+ jobOut:{farm:1,lumber:.5,mine:.5,research:1,build:1}, // 住民1人が1時間に作る量
+ farmLv:.5,labLv:.25, // 畑Lvごとの食料の増え方／研究小屋Lv2からの研究の速さの増え方
+ eat:.25,          // 住民1人が1時間に食べる食料
+ foodStart:10,growFood:3, // 最初の食料／1日1回、空き家があり食料が「住民×この数」以上なら住民が1人増える
+ shareCap:[40,40], // 住民が共有倉庫にためられる量：基本＋共有倉庫Lvごと（寄付はこの上限に関係なく入る）
+ rarShop:.3,       // 工房Lv2から、コモン以外の出やすさがLvごとにこの割合だけ上がる
+ gearMax:40,       // 持てる装備の数
+ fireHeal:.1       // 「火の利用」で増える勝利時の回復
 };
 // 武器種ごとの性質（射程・体勢ダメージ倍率）。レアリティや時代では変わらない
 const WPN={spear:{rg:2,pm:1},club:{rg:1,pm:1.5},sling:{rg:4,pm:.5},staff:{rg:1,pm:.8},knife:{rg:1,pm:.5},axe:{rg:1,pm:.7},bow:{rg:5,pm:.4},none:{rg:1,pm:.6}};
