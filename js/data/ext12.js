@@ -71,3 +71,17 @@ E('pirate','海賊','🏴‍☠️',40,24,'weak','flank',4,1,[['a','カトラス
 E('siren','セイレーン','🧜',32,16,'weak','shooter',3,3,[['a','水の矢',8],['x','歌声','weak',1,1]],null,{era:2});
 bioAdd(2,'sea',{mobs:['shark','shark','pirate','siren']});
 Object.assign(DROP,{shark:['fang',2,.7],pirate:['gold',1,.5],siren:['pearl',1,.4]});
+// ---- v0.12.1：武器種ごとの攻撃カードを5枚にそろえる ----
+CARDS.bw_pin.ty='deb';CARDS.bw_step.ty='mov';   // 弓は7枚 → 攻撃と妨害・移動を兼ねる2枚を「妨害」「移動」に
+C('sp_twin','二段突き','atk',1,'e','spear',[['d',4,.6,2]],{rw:1});
+C('cl_bash','打ち上げ','atk',1,'e','club',[['d',5,.8],['s','vuln',1,'t']],{rw:1,pk:1.3});
+C('sl_hail','礫の雨','atk',2,'E','sling',[['d',5,.9]],{rw:1});
+C('ax_throw','斧投げ','atk',1,'e','axe',[['d',6,1]],{rw:1,rg:3});
+C('mg_lance','魔力の槍','atk',2,'e','wand',[['d',12,2],['s','vuln',1,'t']],{rw:1});
+C('st_thrust','杖突き','atk',1,'e','staff',[['d',4,.7],['dr',1]],{rw:1});
+C('st_spin','旋風打','atk',2,'E','staff',[['d',5,.9]],{rw:1});
+C('st_crack','脳天打ち','atk',2,'e','staff',[['d',10,1.8],['s','stun',1,'t']],{rw:1,x:1});
+C('kn_throw','投げナイフ','atk',1,'e','knife',[['d',5,.9]],{rw:1,rg:3});
+C('kn_vital','急所突き','atk',2,'e','knife',[['d',8,1.5,1,{s:'vuln',v:5}]],{rw:1});
+C('mc_swing','振り回し打ち','atk',1,'E','mace',[['d',3,.6]],{rw:1});
+C('mc_crush','粉砕','atk',2,'e','mace',[['d',13,2.2]],{rw:1,pk:1.3});
