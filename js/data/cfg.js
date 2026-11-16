@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.12.1';
+const VERSION='0.12.2';
 const CFG={
  deckMax:20,      // v0.11.2：冒険中のデッキの上限（超える時は入れ替え）
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
@@ -17,8 +17,8 @@ const CFG={
  enemyStep:800,
  autoStep:450,     // オートバトルで1つの行動にかける時間（ミリ秒）
  skipTurns:3,skipHp:.2,skipHit:.7,skipDmg:.5, // バトルスキップ：倒すまで3ターン以内・受けるダメージが今のHPの20%以内の時だけ（skipHit＝攻撃に使える割合、skipDmg＝受けるダメージの見積もり）
- startWeapons:['stone_spear','wood_club','sling','bone_staff'],
- eliteWeapons:['obsidian_knife','stone_axe','hunt_bow','atlatl'],
+ startWeapons:['stone_spear','wood_club','short_bow','bone_staff'],
+ eliteWeapons:['obsidian_knife','stone_axe','hunt_bow'],
  bossWeapons:['mammoth_spear','b_tusk'],
  mobs:['hyena','wolf','boar','snake','monkey'],
  // ---- 探索（v0.2.0） ----
@@ -72,4 +72,4 @@ const CFG={
  ptLost:15000      // パーティー：相手からこれだけ何も届かなければ、切れたとみなす（ミリ秒）
 };
 // 武器種ごとの性質（射程・体勢ダメージ倍率）。レアリティや時代では変わらない
-const WPN={spear:{rg:2,pm:1},club:{rg:1,pm:1.5},sling:{rg:4,pm:.5},staff:{rg:1,pm:.8},knife:{rg:1,pm:.5},axe:{rg:1,pm:.7},bow:{rg:5,pm:.4},none:{rg:1,pm:.6}};
+const WPN={spear:{rg:2,pm:1},club:{rg:1,pm:1.5},staff:{rg:1,pm:.8},knife:{rg:1,pm:.5},axe:{rg:1,pm:.7},bow:{rg:5,pm:.4},none:{rg:1,pm:.6}};

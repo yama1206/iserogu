@@ -75,7 +75,6 @@ Object.assign(DROP,{shark:['fang',2,.7],pirate:['gold',1,.5],siren:['pearl',1,.4
 CARDS.bw_pin.ty='deb';CARDS.bw_step.ty='mov';   // 弓は7枚 → 攻撃と妨害・移動を兼ねる2枚を「妨害」「移動」に
 C('sp_twin','二段突き','atk',1,'e','spear',[['d',4,.6,2]],{rw:1});
 C('cl_bash','打ち上げ','atk',1,'e','club',[['d',5,.8],['s','vuln',1,'t']],{rw:1,pk:1.3});
-C('sl_hail','礫の雨','atk',2,'E','sling',[['d',5,.9]],{rw:1});
 C('ax_throw','斧投げ','atk',1,'e','axe',[['d',6,1]],{rw:1,rg:3});
 C('mg_lance','魔力の槍','atk',2,'e','wand',[['d',12,2],['s','vuln',1,'t']],{rw:1});
 C('st_thrust','杖突き','atk',1,'e','staff',[['d',4,.7],['dr',1]],{rw:1});

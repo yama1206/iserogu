@@ -10,7 +10,7 @@ const FAC={
 // 研究：f＝分野、lab＝必要な研究小屋Lv、rp＝必要な研究ポイント、cost＝素材（共有倉庫）、req＝先に必要な研究、key＝時代を進めるのに必要な重要技術
 const FIELD6={sci:'科学・技術',ind:'生産・工業',agr:'農業・食料',cul:'文化・社会',med:'医療・生物',mag:'魔法・異世界技術'};
 const TECH={
- t_stone:{n:'打製石器',f:'sci',lab:1,rp:6,cost:{stone:5},key:1,d:'石槍・棍棒・投石紐・骨の杖を製作できる'},
+ t_stone:{n:'打製石器',f:'sci',lab:1,rp:6,cost:{stone:5},key:1,d:'石槍・棍棒・小弓・骨の杖を製作できる'},
  t_fire:{n:'火の利用',f:'sci',lab:1,rp:8,cost:{wood:5,flint:2},key:1,d:'戦闘に勝った時の回復量が増える'},
  t_farm:{n:'採集と栽培',f:'agr',lab:1,rp:8,cost:{berry:4,fiber:4},key:1,d:'畑を建てられる'},
  t_build:{n:'木組みの建築',f:'ind',lab:1,rp:10,cost:{wood:8,fiber:4},d:'施設をLv2にできる'},
@@ -18,16 +18,16 @@ const TECH={
  t_herb:{n:'薬草の知識',f:'med',lab:1,rp:8,cost:{herb:4},d:'最大HP+6'},
  t_knap:{n:'黒曜石の加工',f:'ind',lab:1,rp:10,cost:{stone:6,flint:3},req:['t_stone'],d:'黒曜石のナイフ・石斧を製作できる'},
  t_hide:{n:'皮なめし',f:'ind',lab:2,rp:12,cost:{hide:3,fiber:4},d:'戦闘開始時にブロック+3'},
- t_bow:{n:'弓矢',f:'sci',lab:2,rp:16,cost:{wood:8,fiber:6,bone:2},req:['t_knap'],key:1,d:'狩猟弓・投槍器アトラトルを製作できる'},
+ t_bow:{n:'弓矢',f:'sci',lab:2,rp:16,cost:{wood:8,fiber:6,bone:2},req:['t_knap'],key:1,d:'狩猟弓を製作できる'},
  t_ivory:{n:'牙の加工',f:'ind',lab:2,rp:20,cost:{fang:2,tusk:2,bone:4},req:['t_bow'],d:'マンモス牙の武器を製作できる。施設をLv3にできる'}};
 // 研究で全員にかかる効果（戦闘の能力値に足す）
 const TECHFX={t_herb:{maxhp:6},t_hide:{firstBlock:3}};
 // 製作：tech＝必要な研究、shop＝必要な工房Lv、cost＝素材（個人倉庫）
 const RECIPE={
  stone_spear:{tech:'t_stone',shop:1,cost:{wood:3,stone:2}},wood_club:{tech:'t_stone',shop:1,cost:{wood:4}},
- sling:{tech:'t_stone',shop:1,cost:{fiber:4,stone:1}},bone_staff:{tech:'t_stone',shop:1,cost:{wood:2,bone:2}},
+ short_bow:{tech:'t_stone',shop:1,cost:{wood:3,fiber:3}},bone_staff:{tech:'t_stone',shop:1,cost:{wood:2,bone:2}},
  obsidian_knife:{tech:'t_knap',shop:1,cost:{stone:4,flint:3}},stone_axe:{tech:'t_knap',shop:1,cost:{stone:5,wood:3}},
- hunt_bow:{tech:'t_bow',shop:2,cost:{wood:6,fiber:5}},atlatl:{tech:'t_bow',shop:2,cost:{wood:4,bone:3,fiber:3}},
+ hunt_bow:{tech:'t_bow',shop:2,cost:{wood:6,fiber:5}},
  mammoth_spear:{tech:'t_ivory',shop:2,cost:{tusk:2,wood:4,fang:1}},b_tusk:{tech:'t_ivory',shop:2,cost:{tusk:3,hide:2}}};
 // レアリティ：p＝出現率、m＝基本性能（武器のカードのダメージとブロック）の倍率、fx＝追加効果の数[最小,最大]
 const RAR=[{n:'コモン',c:'#c8c8c8',p:.6,m:1,fx:[0,0]},{n:'アンコモン',c:'#70d070',p:.25,m:1.12,fx:[0,1]},{n:'レア',c:'#60a8ff',p:.1,m:1.25,fx:[1,1]},{n:'エピック',c:'#c080ff',p:.04,m:1.4,fx:[1,2]},{n:'レジェンダリー',c:'#ffb040',p:.01,m:1.6,fx:[2,2]}];

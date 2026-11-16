@@ -6,7 +6,8 @@ function ensureWorld(){const w=G.world;if(!w.pl)w.pl={};if(!w.share)w.share={};
  if(!w.base)w.base={t:0,acc:0,fac:{house:1},tech:{},res:null,bld:null,pop:CFG.popStart,food:CFG.foodStart,job:Object.assign({},CFG.jobPrio),frac:{}};if(w.base.era==null)w.base.era=0;w.v=2;return w}
 function plOf(id){const w=ensureWorld(),o=ownerId(id);
  if(!w.pl[o]){const pl=w.pl[o]={store:{},gear:[],gu:0};CFG.startWeapons.forEach(i=>pl.gear.push({u:++pl.gu,id:i,r:0,fx:{}}));if(w.store){pl.store=w.store;delete w.store}}   // v0.2 の倉庫は個人倉庫へ引き継ぐ
- return w.pl[o]}
+ const pl=w.pl[o];if(!pl.mig12){pl.mig12=1;const M={sling:'short_bow',atlatl:'hunt_bow',clay_sling:'hunt_bow'};(pl.gear||[]).concat(pl.shed||[]).forEach(g=>{if(M[g.id])g.id=M[g.id]})}   // v0.12.2：投擲の武器は弓に置きかえる
+ return pl}
 function gearUsed(p,u){return G.players.some(q=>q!==p&&ownerId(q.id)===ownerId(p.id)&&(q.g===u||armU(q).includes(u)))}
 function gearInUse(p,u){return G.players.some(q=>ownerId(q.id)===ownerId(p.id)&&(q.g===u||armU(q).includes(u)))}
 function armU(q){return SLOTL.map(s=>q[SLOTS[s].k]).filter(u=>u)}   // 装備している防具の u（頭・胴・足）

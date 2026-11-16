@@ -1,7 +1,7 @@
 'use strict';
 /* カード（ERA ARMS から流用。rg=射程の上書き、pk=体勢ダメージ倍率、mv=移動を追加） */
 const ST={str:['力','💪'],tstr:['気合','🔥'],weak:['弱体','🌀'],vuln:['無防備','🎯'],bleed:['出血','🩸'],stun:['気絶','💫'],evade:['回避','💨'],taunt:['挑発','📣']};
-const REQN={spear:'槍',club:'棍棒',sling:'投擲',staff:'杖',knife:'短剣',axe:'斧',bow:'弓',any:'武器'};
+const REQN={spear:'槍',club:'棍棒',staff:'杖',knife:'短剣',axe:'斧',bow:'弓',any:'武器'};
 const TYN={atk:'攻撃',def:'防御',evd:'回避',sup:'支援',heal:'回復',deb:'妨害',sp:'特殊',mov:'移動'};
 const TYI={atk:'⚔️',def:'🛡️',evd:'💨',sup:'📣',heal:'💚',deb:'🌀',sp:'✨',mov:'👟'};
 const CARDS={};
@@ -21,11 +21,6 @@ C('cl_guard','受け止め','def',1,'s','club',[['b',5]]);
 C('cl_crush','叩き潰す','atk',2,'e','club',[['d',11,2],['s','weak',1,'t']],{rw:1,pk:1.3});
 C('cl_wild','振り回し','atk',1,'E','club',[['d',3,.6]],{rw:1});
 C('cl_stun','脳天割り','atk',2,'e','club',[['d',6,1],['s','stun',1,'t']],{rw:1,x:1});
-C('sl_shot','投石','atk',1,'e','sling',[['d',5]]);
-C('sl_dodge','身かわし','evd',1,'s','sling',[['ev',1],['b',2,.4]]);
-C('sl_head','頭部狙い','atk',1,'e','sling',[['d',3,.6],['s','weak',1,'t']],{rw:1,pk:1.5});
-C('sl_aim','狙い撃ち','atk',2,'e','sling',[['d',10,2],['s','vuln',1,'t']],{rw:1});
-C('sl_rain','連続投擲','atk',1,'r','sling',[['d',3,.5,2]],{rw:1});
 C('st_hit','杖打ち','atk',1,'e','staff',[['d',5]]);
 C('st_parry','杖の受け流し','def',1,'s','staff',[['b',6]]);
 C('st_sweep','足払い','atk',1,'e','staff',[['d',3,.6],['s','weak',1,'t']],{rw:1,pk:2});

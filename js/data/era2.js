@@ -4,7 +4,7 @@
 ERAS.push({n:'古代',sub:'土器と青銅',ac:'#d8a848'});
 // ---- 古代の研究 ----
 Object.assign(TECH,{
- t_pottery:{era:1,n:'土器',f:'ind',lab:2,rp:18,cost:{clay:6,wood:6},key:1,d:'炉を建てられる。土弾の投石紐・砂漠の衣・葦の大盾を製作できる'},
+ t_pottery:{era:1,n:'土器',f:'ind',lab:2,rp:18,cost:{clay:6,wood:6},key:1,d:'炉を建てられる。砂漠の衣・葦の大盾を製作できる'},
  t_copper:{era:1,n:'銅の精錬',f:'sci',lab:2,rp:20,cost:{copper:4,wood:8},req:['t_pottery'],d:'銅のナイフ・銅の斧を製作できる（炉が必要）'},
  t_bronze:{era:1,n:'青銅器',f:'sci',lab:3,rp:30,cost:{copper:8,ember:2,stone:8},req:['t_copper'],key:1,d:'青銅の剣・槍・戦斧・ケペシュ、青銅の兜・胸甲・すね当て・丸盾を製作できる（炉が必要）'},
  t_masonry:{era:1,n:'石積み',f:'ind',lab:2,rp:22,cost:{stone:16,clay:6},d:'施設をLv4にできる。炉をLv3にできる'},
@@ -31,7 +31,6 @@ C('sw_cross','十字斬り','atk',2,'e','sword',[['d',9,1.6],['s','vuln',1,'t']]
 C('sw_sweep','横薙ぎ','atk',1,'E','sword',[['d',4,.7]],{rw:1});
 C('sw_counter','見切り','evd',0,'s','sword',[['ev',1],['b',2,.3]],{rw:1,x:1});
 // ---- 古代の武器（era＝1） ----
-W('clay_sling','土弾の投石紐','🪀',1,1,'sling',1,2,'sl_shot sl_shot sl_dodge sl_head sl_rain');
 W('copper_knife','銅のナイフ','🔪',1,1,'knife',1,2,'kn_stab kn_stab kn_slash kn_dodge kn_quick');
 W('copper_axe','銅の斧','🪓',1,1,'axe',1,2,'ax_chop ax_chop ax_guard ax_rend');
 W('bronze_sword','青銅の剣','🗡️',1,2,'sword',1,3,'sw_slash sw_slash sw_parry sw_combo');
@@ -52,7 +51,6 @@ Object.assign(ARM,{
  aspis:{n:'大円盾',em:'🔰',sl:'s',hp:10,ps:16,red:1,mv:-1,blk:4,d:'青銅張りの大きな円盾。とても硬いが移動力-1'}});
 // 製作（forge＝必要な炉Lv）
 Object.assign(RECIPE,{
- clay_sling:{tech:'t_pottery',shop:2,cost:{fiber:6,clay:4}},
  copper_knife:{tech:'t_copper',shop:2,forge:1,cost:{copper:3,wood:2}},copper_axe:{tech:'t_copper',shop:2,forge:1,cost:{copper:4,wood:4}},
  bronze_sword:{tech:'t_bronze',shop:3,forge:2,cost:{copper:6,ember:1,hide:2}},bronze_spear:{tech:'t_bronze',shop:3,forge:2,cost:{copper:5,wood:6}},
  bronze_axe:{tech:'t_bronze',shop:3,forge:2,cost:{copper:7,wood:5,ember:1}},khopesh:{tech:'t_bronze',shop:4,forge:3,cost:{copper:8,ember:2,obsidian:2}},
