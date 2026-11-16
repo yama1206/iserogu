@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.11.2';
+const VERSION='0.12.0';
 const CFG={
  deckMax:20,      // v0.11.2：冒険中のデッキの上限（超える時は入れ替え）
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
@@ -41,6 +41,7 @@ const CFG={
  eliteDist:14,eliteRate:.07, // 遠くでは通常の遭遇がまれに強敵になる
  nodeRate:.045,gatherN:[1,3],// 採集ポイントの多さ／1回で採れる数
  loseBag:.3,
+ coldStep:3,coldDmg:.05, // v0.12.0：雪原を防寒具なしで歩くと、この歩数ごとに最大HPのこの割合だけHPが減る
  // ---- 開拓地（v0.7.0） ----
  outCost:{wood:12,stone:8,fiber:6}, // 開拓地を作る素材（荷物→個人倉庫の順に使う）
  outMin:24,        // 拠点・ほかの開拓地からこれだけ離れていないと作れない（マス）

@@ -1,8 +1,8 @@
 'use strict';
 /* イセログ フィールドの描画と歩く操作（描画は View を使う。視点は戦闘と同じ：上＝奥） */
-const FT={p:['#74b455','#6aa94d'],f:['#4c8f45','#468841'],t:['#4c8f45','#468841'],h:['#c7ae68','#bfa560'],w:['#58a8e0','#4f9fd8'],r:['#8a9478','#848e72'],
+const FT={p:['#74b455','#6aa94d'],f:['#4c8f45','#468841'],t:['#4c8f45','#468841'],h:['#c7ae68','#bfa560'],w:['#58a8e0','#4f9fd8'],o:['#3f86c8','#3a7fc0'],r:['#8a9478','#848e72'],
  s:['#e6cf8c','#dfc683'],n:['#eef3f7','#e3ebf1'],m:['#6e7a4a','#667244'],a:['#5c4f4a','#544844'],l:['#e8541c','#f06a20']};
-const FMC={p:[116,180,85],f:[62,128,60],t:[38,92,44],h:[199,174,104],w:[88,168,224],r:[128,130,128],s:[230,207,140],n:[238,243,247],m:[100,112,68],a:[92,79,74],l:[232,84,28]};
+const FMC={p:[116,180,85],f:[62,128,60],t:[38,92,44],h:[199,174,104],w:[88,168,224],o:[60,128,196],r:[128,130,128],s:[230,207,140],n:[238,243,247],m:[100,112,68],a:[92,79,74],l:[232,84,28]};
 // 通れない「t」の見た目（バイオームごと）
 const TREE={desert:'🌵',snow:'🌲',swamp:'🌳',volcano:'🪵'};
 // 敵が出ない範囲（拠点と開拓地のまわり）の色。[x0,y0,x1,y1]（マスの端）
@@ -43,6 +43,7 @@ const FV={jt:0,v:View.create(),keys:{},joy:null,tile:40,top:0,last:0,trail:[],im
   fixedNear(c.x,c.near-FAR/2,FAR).forEach(f=>{if(fd.dead[f.key])return;const b=f.k==='b';View.add(v,{x:f.x+.5,y:f.y+.6,w:b?1.2:.9,h:b?1.7:1.2,art:'unit',o:{em:EN[f.en[0]].em,ring:'#d0452c'},
    after:(k,X,Y,S)=>{k.font='bold '+Math.max(10,S*.3)+'px sans-serif';k.textAlign='center';k.lineWidth=3;k.strokeStyle='#000';const s=b?'👑ボス':'⚠️強敵',y=Y-(b?1.78:1.28)*S;k.strokeText(s,X,y);k.fillStyle='#ff8a70';k.fillText(s,X,y)}})});
   G.players.forEach((p,i)=>{if(p.out)return;let px=fd.x,py=fd.y;if(i){const t=this.trail[this.trail.length-1-i*5];if(t){px=t[0];py=t[1]}else{px=fd.x-.45*i;py=fd.y}}
+   {const tt=ftile(Math.floor(px),Math.floor(py));if(tt==='w'||tt==='o')View.add(v,{x:px,y:py-.02,w:tt==='o'?1.1:.9,h:tt==='o'?.9:.6,art:'emo',o:{em:tt==='o'?'⛵':'🛶'}})}   // 水の上は舟に乗る
    View.add(v,{x:px,y:py,w:.7,h:.98,art:'unit',focus:true,o:{em:CH[p.ch].em,ring:p.id===MY?'#e8b800':'#2f9e56',back:fd.bk,flip:fd.fl},
     after:p.id!==MY||!this.near?null:(k,X,Y,S)=>{k.font=(S*.5)+'px '+View.EMF;k.textAlign='center';k.fillText('✋',X,Y-S*(1.1+Math.sin(now/200)*.05))}})});
   // 同じ世界の仲間（オンライン）。届いた位置へなめらかに動かす

@@ -39,7 +39,7 @@ function onState(){if(!G)return render();const now=performance.now();if(G.evn<ui
   else if(e.k==='win'){ui.banner='勝利！';sfx('win')}else if(e.k==='lose')sfx('lose');
   else if(e.k==='tech'){toast('🔬 研究完了：'+TECH[e.id].n);sfx('win')}else if(e.k==='built'){toast('🏗️ '+FAC[e.id].n+' がLv'+e.lv+'になった');sfx('win')}else if(e.k==='pop')toast('👥 住民が増えた（'+e.n+'人）');
   else if(e.k==='era'){toast('🏛️ 時代が「'+ERAS[e.e].n+'」に進んだ！新しい研究ができます。新しい敵や素材も現れます');sfx('win')}else if(e.k==='pbuilt'){toast(PFAC[e.id].em+' '+PFAC[e.id].n+' がLv'+e.lv+'になった');sfx('win')}else if(e.k==='pup'){toast('🥋 「'+CARDS[e.id].n+'」を永久に強化した');sfx('buff')}else if(e.k==='harvest'){toast('🪴 収穫：'+matList(e.o));sfx('heal')}
-  else if(e.k==='craft'){toast('🔨 【'+RAR[e.r].n+'】'+itemOf(e.id).n+' を製作した！');sfx(e.r>=2?'win':'buff')}else if(e.k==='donate')sfx('buff');
+  else if(e.k==='craft'){toast('🔨 【'+RAR[e.r].n+'】'+itemOf(e.id).n+' を製作した！');sfx(e.r>=2?'win':'buff')}else if(e.k==='donate')sfx('buff');else if(e.k==='cold'){toast('🥶 寒い…HPが減った（防寒具があれば平気）');sfx('hit')}else if(e.k==='trade'){toast(e.s?'💰 '+MAT[e.m].n+' ×'+e.n+' を売って 銀貨'+e.c+'枚':'💰 '+MAT[e.m].n+' ×'+e.n+' を 銀貨'+e.c+'枚で買った');sfx('buff')}
   else if(e.k==='die')sfx('die');else if(e.k==='down'||e.k==='out')sfx('down');else if(e.k==='card')sfx('card');else if(e.k==='blk')sfx('block');else if(e.k==='buff')sfx('buff');else if(e.k==='deb')sfx('deb')}
  if(ui.ph!==G.phase){ui.ph=G.phase;ui.pick=null;ui.upm=false;ui.upc=null;ui.mode=null;ui.sel=null}
  saveLocal();if(cn)setTimeout(()=>Cloud.flush(),1500);let p=me();

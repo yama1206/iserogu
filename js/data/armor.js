@@ -43,7 +43,7 @@ TECH.t_ivory.d+='。うろこの鎧・牙の鎧・牙の兜・うろこのすね
 function itemOf(id){return EQ[id]||ARM[id]||{n:'？',em:'❔'}}
 // 装備した防具（実物 g）の性能
 function armStat(g){const a=ARM[g.id],m=RAR[g.r].m;return {hp:Math.round(a.hp*m),ps:Math.round(a.ps*m),red:a.red,mv:a.mv,blk:a.blk||0}}
-function armInfo(g){const s=armStat(g);return ['HP+'+s.hp,'体勢+'+s.ps,s.red?'被ダメージ-'+s.red:'',s.blk?'毎ターン ブロック+'+s.blk:'',s.mv?'移動力'+(s.mv>0?'+':'')+s.mv:''].filter(x=>x).join('・')}
+function armInfo(g){const s=armStat(g);return ['HP+'+s.hp,'体勢+'+s.ps,s.red?'被ダメージ-'+s.red:'',s.blk?'毎ターン ブロック+'+s.blk:'',s.mv?'移動力'+(s.mv>0?'+':'')+s.mv:'',ARM[g.id].cold?'防寒':''].filter(x=>x).join('・')}
 TECH.t_stone.d+='。木の盾を製作できる';
 // 盾が使えるか（両手武器では使えない）
 function shieldOk(p){return !(EQ[p.w]&&EQ[p.w].hands>=2)}

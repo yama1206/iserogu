@@ -29,7 +29,11 @@ function armSelH(p,pl){const all=pl.gear.filter(x=>ARM[x.id]);
 function tStore(){const pl=plOf(MY),sh=G.world.share,ks=Object.keys(MAT).filter(m=>(pl.store[m]||0)>0),b=G.world.base;
  return `<div class="box col"><div class="hd">個人倉庫</div><div class="small">冒険で持ち帰った素材。武器の製作に使います。</div>
  ${ks.length?ks.map(m=>`<div class="it"><div class="tx"><b>${MAT[m].em}${MAT[m].n}</b> ×${pl.store[m]}</div>${btn('donate','寄付 1',{i:m+':1',c:'sm'})}${btn('donate','寄付 5',{i:m+':5',c:'sm'})}${btn('donate','すべて',{i:m+':all',c:'sm'})}</div>`).join(''):'<div class="small">まだ何もありません。冒険で素材を集めましょう。</div>'}</div>
- <div class="box col"><div class="hd">共有倉庫</div><div class="small">建築と研究に使います。<b style="color:#ffb060">寄付した素材は戻せません。</b></div><div>${matList(sh)}</div><div class="small">🍖食料 ${Math.floor(b.food)}　／　住民がためられる上限 ${shareCap()}（共有倉庫のLvで増える）</div></div>`}
+ <div class="box col"><div class="hd">共有倉庫</div><div class="small">建築と研究に使います。<b style="color:#ffb060">寄付した素材は戻せません。</b></div><div>${matList(sh)}</div><div class="small">🍖食料 ${Math.floor(b.food)}　／　住民がためられる上限 ${shareCap()}（共有倉庫のLvで増える）</div></div>${tradeH(pl)}`}
+// 交易所（個人倉庫の素材を銀貨で売り買い）
+function tradeH(pl){if(!FAC.market||(FAC.market.era||0)>eraOf())return '';if(!facLv('market'))return '<div class="box small" style="text-align:center">🏪交易所を建てると、素材を銀貨で売り買いできます。</div>';const r=sellRate(),ks=Object.keys(VAL).filter(m=>(VAL[m][1]||0)<=eraOf());
+ return `<div class="box col"><div class="hd">🏪 交易所 Lv${facLv('market')}　💰銀貨 ${pl.store.coin||0}枚</div><div class="small">売る：値打ち×${r.toFixed(1)}（端数は切り捨て）</div>${Object.keys(VAL).filter(m=>(pl.store[m]||0)>0).map(m=>`<div class="it"><div class="tx"><b>${MAT[m].em}${MAT[m].n}</b> ×${pl.store[m]}　<span class="small">5個で💰${Math.floor(5*VAL[m][0]*r)}</span></div>${btn('sell','1個売る',{i:m+':1',c:'sm'})}${btn('sell','5個売る',{i:m+':5',c:'sm'})}</div>`).join('')||'<div class="small">売れる素材がありません。</div>'}
+ <div class="hd">買う</div>${ks.map(m=>`<div class="it"><div class="tx"><b>${MAT[m].em}${MAT[m].n}</b>　<span class="small">1個 💰${buyPrice(m)}</span></div>${btn('buy','1個',{i:m+':1',c:'sm '+((pl.store.coin||0)<buyPrice(m)?'dim':'')})}${btn('buy','5個',{i:m+':5',c:'sm '+((pl.store.coin||0)<buyPrice(m)*5?'dim':'')})}</div>`).join('')}</div>`}
 /* ---------- 建築 ---------- */
 function tBuild(){const b=G.world.base,sh=G.world.share,a=jobAlloc();let h='';
  if(b.bld){const f=FAC[b.bld.id],wk=f.work[facLv(b.bld.id)];h+=`<div class="box col"><div class="hd">建築中：${f.em}${f.n} Lv${facLv(b.bld.id)+1}</div>${pgH(b.bld.w,wk)}<div class="small">建築担当 ${a.build}人　${etaH(wk-b.bld.w,jobRate('build',a.build))}</div></div>`}
@@ -53,13 +57,17 @@ function tCraft(){const p=me(),pl=plOf(p.id),lv=facLv('shop'),od=rarOdds(pl),fl=
   return `<div class="it"><div class="tx"><b>${itemOf(g.id).em}${itemOf(g.id).n}</b> ${gearFxH(g)}${ARM[g.id]?'<br><span class="small">'+armInfo(g)+'</span>':''}${eq?' <span class="small">（装備中）</span>':''}</div>${eq?'':btn('scrap','手放す',{i:g.u,c:'sm'})}</div>`}).join('')}</div>
  <div class="small">素材は個人倉庫から使います。装備の変更は「出発」タブで。</div>`;return h}
 /* ---------- 住民 ---------- */
-function tPeople(){const b=G.world.base,a=jobAlloc(),un={farm:'食料',lumber:'木材',mine:'石',research:'研究ポイント',build:'作業'};
+function tPeople(){const b=G.world.base,a=jobAlloc(),un={farm:'食料',lumber:'木材',mine:'石',research:'研究ポイント',build:'作業',make:'製造'};
  return `<div class="box col"><div class="hd">住民 ${b.pop}人（住める人数 ${popCap()}人）</div><div class="small">🍖食料 ${Math.floor(b.food)}（1時間に${(b.pop*CFG.eat).toFixed(1)}食べる）。1日1回、空き家があり食料が${b.pop*CFG.growFood}以上あると1人増えます。</div></div>
  <div class="box col"><div class="hd">仕事の優先度</div><div class="small">優先度を決めると、住民が自動で配置されます。</div>
- ${Object.keys(JOBS).map(j=>{const J=JOBS[j],act=jobActive(j);return `<div class="it"><div class="tx"><b>${J.em}${J.n}</b> ${a[j]}人<br><span class="small">${J.d}${act?(a[j]?`（1時間に${un[j]}+${+jobRate(j,a[j]).toFixed(1)}）`:''):'（今はすることがありません）'}</span></div>${PRIO.map((n,v)=>btn('job',n,{i:j+':'+v,c:'sm '+((b.job[j]||0)===v?'on':'')})).join('')}</div>`}).join('')}</div>`}
+ ${Object.keys(JOBS).map(j=>{const J=JOBS[j],act=jobActive(j);return `<div class="it"><div class="tx"><b>${J.em}${J.n}</b> ${a[j]}人<br><span class="small">${J.d}${act?(a[j]?`（1時間に${un[j]}+${+jobRate(j,a[j]).toFixed(1)}）`:''):'（今はすることがありません）'}</span></div>${PRIO.map((n,v)=>btn('job',n,{i:j+':'+v,c:'sm '+((b.job[j]||0)===v?'on':'')})).join('')}</div>`}).join('')}</div>${mkH()}`}
+// 製造所で作る物を選ぶ
+function mkH(){const b=G.world.base;if(!FAC.works||(FAC.works.era||0)>eraOf())return '';if(!facLv('works'))return '<div class="box small" style="text-align:center">🏭製造所を建てると、住民が素材を作れるようになります（研究「分業」）。</div>';
+ return `<div class="box col"><div class="hd">🏭 製造所で作る物</div><div class="small">共有倉庫の素材を使って作り、共有倉庫に入れます。材料が足りない時は止まります。</div>${Object.keys(MAKE).map(m=>{const k=MAKE[m],ok=mkOk(m);return `<div class="it"><div class="tx"><b>${b.mk===m?'▶':''}${MAT[m].em}${MAT[m].n}</b> ×${k.out}<br><span class="small">材料：${Object.keys(k.in).map(x=>MAT[x].em+MAT[x].n+k.in[x]).join('・')}${ok?'':'　<span class="ng">研究「'+TECH[k.tech].n+'」が必要</span>'}</span></div>${btn('mk',b.mk===m?'作っている':'これを作る',{i:m,c:'sm '+(b.mk===m?'on':ok?'':'dim')})}</div>`}).join('')}</div>`}
 Object.assign(ACT,{
  tab(i){ui.tab=i},equip(i){sendAct({t:'equip',g:+i})},unarm(i){const p=me(),u=p&&SLOTS[i]&&p[SLOTS[i].k];if(u)sendAct({t:'equip',g:u})},
  donate(i){const [m,n]=i.split(':');sendAct({t:'donate',m,n:n==='all'?'all':+n})},
+ mk(i){sendAct({t:'mk',m:i})},sell(i){const [m,n]=i.split(':');sendAct({t:'sell',m,n:+n})},buy(i){const [m,n]=i.split(':');sendAct({t:'buy',m,n:+n})},
  build(i){sendAct({t:'build',id:i})},research(i){sendAct({t:'research',id:i})},craft(i){sendAct({t:'craft',id:i})},scrap(i){sendAct({t:'scrap',g:+i})},
  job(i){const [j,v]=i.split(':');sendAct({t:'job',j,v:+v})},
  pbuild(i){sendAct({t:'pbuild',id:i})},pup(i){sendAct({t:'pup',id:i})},harvest(){sendAct({t:'harvest'})},stow(i){sendAct({t:'stow',g:+i})},unstow(i){sendAct({t:'unstow',g:+i})}});

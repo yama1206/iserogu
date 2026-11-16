@@ -7,7 +7,8 @@ const TOWN={W:13,H:11,sx:6.5,sy:8.6,spots:[
  {id:'house',x:3,y:7.2,tab:'people'},{id:'farm',x:10,y:7.2,tab:'people'},
  {k:'board',em:'🪧',n:'建築の看板',x:4.9,y:5.1,tab:'build',r:.35},{k:'fire',em:'🔥',n:'たき火',x:6.5,y:5.4,r:.45},
  {k:'gate',em:'🚩',n:'村の出口',x:6.5,y:10.4,tab:'go',r:0},
- {k:'home',em:'🏠',n:'自分の家',x:11.6,y:5.2,tab:'home',r:.6},{id:'forge',x:1.4,y:5.2,tab:'craft',era:1}]};
+ {k:'home',em:'🏠',n:'自分の家',x:11.6,y:5.2,tab:'home',r:.6},{id:'forge',x:1.4,y:5.2,tab:'craft',era:1},
+ {id:'works',x:1.6,y:9.6,tab:'people',era:1},{id:'clinic',x:4.1,y:9.6,tab:'build',era:1},{id:'school',x:8.9,y:9.6,tab:'tech',era:1},{id:'market',x:11.4,y:9.6,tab:'store',era:2}]};
 // 今の時代で町にある物（炉は古代から）
 function townSpots(){return TOWN.spots.filter(s=>(s.era||0)<=eraOf())}
 // 建物の名前と絵（施設はレベルと建築中を反映）

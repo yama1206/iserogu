@@ -8,7 +8,7 @@ function vnoise(x,y,s){const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,u
 function newWorld(){return {v:3,seed:R(1e9)+1,seen:{},sv:0}}
 function genWorld(seed){if(WORLD&&WORLD.seed===seed)return WORLD;return WORLD={seed,s:seed|0,fx:new Map(),tc:new Map()}}
 const wld=()=>genWorld(G.world.seed);
-const BLOCK='twrl';
+const BLOCK='twrlo';   // o＝海（v0.12.0：葦舟で水辺、帆船で海を渡れる）
 // 拠点からの距離（マス。チェビシェフ距離）と危険度
 function fdist(x,y){return Math.max(Math.abs(x),Math.abs(y))}
 function dangerAt(x,y){return Math.min(CFG.lvMax,Math.floor(fdist(x,y)/CFG.lvStep))}
@@ -24,7 +24,7 @@ function biomeAt(x,y){const s=wld().s,B=CFG.biomeScale,d=Math.hypot(x,y),k=Math.
 // マスの地形（区画ごとにまとめて計算して覚えておく）
 function tileCalc(x,y){if(Math.abs(x)<=2&&Math.abs(y)<=2)return 'p';const s=wld().s,b=biomeAt(x,y),r=hsh(x,y,s);
  switch(b){
-  case 'sea':return 'w';
+  case 'sea':return 'o';
   case 'coast':return r<.02?'r':'s';
   case 'forest':return r<.3?'t':r>.975?'r':'f';
   case 'desert':return r<.022?'t':r<.045?'r':vnoise(x/6,y/6,s+3)>.72?'h':'s';
@@ -36,7 +36,11 @@ function tileCalc(x,y){if(Math.abs(x)<=2&&Math.abs(y)<=2)return 'p';const s=wld(
 function ftile(x,y){const C=CFG.chunk,cx=Math.floor(x/C),cy=Math.floor(y/C),W=wld(),key=cx+','+cy;let c=W.tc.get(key);
  if(!c){if(W.tc.size>900)W.tc.clear();c=[];for(let j=0;j<C;j++)for(let i=0;i<C;i++)c.push(tileCalc(cx*C+i,cy*C+j));W.tc.set(key,c)}
  return c[(y-cy*C)*C+(x-cx*C)]}
-function fblock(x,y){return BLOCK.includes(ftile(Math.floor(x),Math.floor(y)))}
+function fblock(x,y){const t=ftile(Math.floor(x),Math.floor(y));return t==='w'?!hasTech('t_boat'):t==='o'?!hasTech('t_ship'):BLOCK.includes(t)}
+// 寒さ（v0.12.0）：雪原を防寒具なしで歩くとHPが減る（1は残る）
+function coldOk(p){return !!(p.apas&&p.apas.cold)}
+function fieldCold(x,y){const fd=G.fd;if(biomeAt(x,y)!=='snow'){fd.cold=0;return}fd.cold=(fd.cold||0)+1;if(fd.cold%CFG.coldStep)return;let n=0;
+ G.players.forEach(p=>{if(p.out||p.down||coldOk(p))return;const v=Math.ceil(maxHp(p)*CFG.coldDmg);if(p.hp>1){p.hp=Math.max(1,p.hp-v);n++}});if(n)ev('cold',{n})}
 function fhit(x,y){const r=.28;return fblock(x-r,y-r)||fblock(x+r,y-r)||fblock(x-r,y+r)||fblock(x+r,y+r)}
 // 区画の強敵・ボス（区画に0か1体）。key＝"x,y"（倒したかどうかは fd.dead[key]）
 function chunkFixed(cx,cy){const W=wld(),key=cx+','+cy;if(W.fe!==eraOf()){W.fx.clear();W.fe=eraOf()}if(W.fx.has(key))return W.fx.get(key);if(W.fx.size>5000)W.fx.clear();let f=null;const C=CFG.chunk,s=W.s;
@@ -91,7 +95,7 @@ function fieldWalk(dx,dy,dt){const fd=G.fd;dx=Math.sign(dx||0);dy=Math.sign(dy||
  const nx=fd.x+dx*sp;if(!fhit(nx,fd.y))fd.x=nx;const ny=fd.y+dy*sp;if(!fhit(fd.x,ny))fd.y=ny;
  for(const f of fixedNear(fd.x,fd.y,2)){if(!fd.dead[f.key]&&Math.hypot(f.x+.5-fd.x,f.y+.5-fd.y)<.9){fieldEnc({k:f.k,en:f.en,field:f.field,fix:f.key,lv:f.lv});return true}}
  const tx=Math.floor(fd.x),ty=Math.floor(fd.y);if(tx===ox&&ty===oy)return false;
- fd.steps++;reveal();if(!CFG.encOn)return false;if(fd.grace>0){fd.grace--;return false}if(fdist(tx,ty)<=CFG.safeR||outSafe(tx,ty))return false;
+ fd.steps++;reveal();fieldCold(tx,ty);if(!CFG.encOn)return false;if(fd.grace>0){fd.grace--;return false}if(fdist(tx,ty)<=CFG.safeR||outSafe(tx,ty))return false;
  if(Math.random()<fd.enc){fieldEnc(rollEnc(tx,ty));return true}fd.enc+=CFG.encStep;return false}
 // いちばん近い採集ポイント（触れている物）
 function fieldNear(){const fd=G.fd;if(!fd||!G.world)return null;let best=null,bd=1.05;const cx=Math.floor(fd.x),cy=Math.floor(fd.y);
