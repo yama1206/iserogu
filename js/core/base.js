@@ -16,7 +16,7 @@ function armorOf(p,sl){const u=p[SLOTS[sl||'b'].k];return u?plOf(p.id).gear.find
 function facLv(id){return G.world.base.fac[id]||0}
 function hasTech(id){return !!(G.world.base&&G.world.base.tech[id])}
 function techFx(){const o={};if(!G.world.base)return o;for(const t in TECHFX)if(hasTech(t))for(const k in TECHFX[t])o[k]=(o[k]||0)+TECHFX[t][k];return o}
-function winHealRate(){return CFG.winHeal+(hasTech('t_fire')?CFG.fireHeal:0)+(hasTech('t_salt')?.05:0)}
+function winHealRate(){return CFG.winHeal+(hasTech('t_fire')?CFG.fireHeal:0)+(hasTech('t_salt')?.05:0)+(hasTech('t_surgery')?.05:0)}
 function eraOf(){return (G&&G.world.base&&G.world.base.era)||0}
 function techEra(id){return TECH[id].era||0}
 function eraReady(e){if(e==null)e=eraOf();return Object.keys(TECH).filter(t=>TECH[t].key&&techEra(t)===e).every(hasTech)}
@@ -32,7 +32,7 @@ function jobActive(j){const b=G.world.base;return j==='research'?!!b.res:j==='bu
 function jobAlloc(){const b=G.world.base,ks=Object.keys(JOBS),w=ks.map(j=>jobActive(j)?(b.job[j]||0):0),tot=w.reduce((a,c)=>a+c,0),out={};ks.forEach(j=>out[j]=0);if(!tot)return out;
  const ex=ks.map((j,i)=>b.pop*w[i]/tot);let left=b.pop;ks.forEach((j,i)=>{out[j]=Math.floor(ex[i]);left-=out[j]});
  ks.map((j,i)=>[ex[i]-out[j],w[i],j]).sort((a,c)=>c[0]-a[0]||c[1]-a[1]).forEach(r=>{if(left>0&&r[1]>0){out[r[2]]++;left--}});return out}
-function jobRate(j,n){const O=CFG.jobOut;return n*O[j]*(j==='farm'?(1+CFG.farmLv*facLv('farm'))*(hasTech('t_irrig')?1.5:1):j==='research'?(1+CFG.labLv*Math.max(0,facLv('lab')-1))*(hasTech('t_writing')?1.25:1):1)}
+function jobRate(j,n){const O=CFG.jobOut;return n*O[j]*(j==='farm'?(1+CFG.farmLv*facLv('farm'))*(hasTech('t_irrig')?1.5:1)*(hasTech('t_aqueduct')?1.3:1):j==='research'?(1+CFG.labLv*Math.max(0,facLv('lab')-1))*(hasTech('t_writing')?1.25:1)*(hasTech('t_philo')?1.25:1):(j==='lumber'||j==='mine')&&hasTech('t_coin')?1.25:1)}
 /* ---------- 時間：ゲーム内1時間ごとにまとめて計算 ---------- */
 function baseHour(){const b=G.world.base,sh=G.world.share,a=jobAlloc(),cap=shareCap();eraCheck();
  if(b.food<cap)b.food=Math.min(cap,b.food+jobRate('farm',a.farm));b.food=Math.max(0,Math.round((b.food-b.pop*CFG.eat)*100)/100);
@@ -53,7 +53,7 @@ function shareOp(a){const w=ensureWorld(),b=w.base,sh=w.share;
   case 'give':{const n=a.n|0;if(!MAT[a.m]||n<=0||n>99999)return '';sh[a.m]=(sh[a.m]||0)+n;return ''}
   case 'build':{const f=FAC[a.id];if(!f||(f.era||0)>(b.era||0))return '';const lv=facLv(a.id);if(lv>=f.cost.length)return 'これ以上は上げられません';if(b.bld)return '建築中の施設があります（建築は1つずつ）';if(f.need[lv]&&!hasTech(f.need[lv]))return '研究「'+techN(f.need[lv])+'」が必要です';if(!canPay(sh,f.cost[lv]))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,f.cost[lv]);b.bld={id:a.id,w:0};return ''}
   case 'research':{const t=TECH[a.id];if(!t||hasTech(a.id))return '';if(techEra(a.id)>(b.era||0))return 'まだ研究できない時代の技術です';if(b.res)return '研究中の技術があります（研究は1つずつ）';if(facLv('lab')<t.lab)return '研究小屋Lv'+t.lab+'が必要です';if((t.req||[]).some(r=>!hasTech(r)))return '先に「'+(t.req||[]).filter(r=>!hasTech(r)).map(r=>TECH[r].n).join('・')+'」の研究が必要です';if(!canPay(sh,t.cost))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,t.cost);b.res={id:a.id,rp:0};return ''}
-  case 'outpost':{const x=a.x|0,y=a.y|0;if(!b.out)b.out=[];if(b.out.length>=CFG.outMax||b.out.some(o=>fdist(x-o.x,y-o.y)<CFG.outMin)||fdist(x,y)<CFG.outMin)return '';b.out.push({x,y});return ''}
+  case 'outpost':{const x=a.x|0,y=a.y|0;if(!b.out)b.out=[];if(b.out.length>=outMaxN()||b.out.some(o=>fdist(x-o.x,y-o.y)<CFG.outMin)||fdist(x,y)<CFG.outMin)return '';b.out.push({x,y});return ''}
   case 'job':{if(!JOBS[a.j])return '';b.job[a.j]=Math.max(0,Math.min(3,a.v|0));return ''}
  }
  return ''}

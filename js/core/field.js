@@ -62,7 +62,7 @@ function outName(i){const o=outs()[i];if(!o)return '🛖 拠点';return '⛺ 開
 // 開拓地の前の、立てる場所
 function outSpot(o){for(const [dx,dy] of [[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]])if(!fhit(o.x+dx+.5,o.y+dy+.5))return [o.x+dx+.5,o.y+dy+.5];return [o.x+.5,o.y+.5]}
 // 作れるかどうか（できない理由。できるなら ''）
-function outCheck(x,y){if(!hasTech('t_camp'))return '研究「'+TECH.t_camp.n+'」が必要です';if(outs().length>=CFG.outMax)return '開拓地はこれ以上作れません（最大'+CFG.outMax+'か所）';
+function outCheck(x,y){if(!hasTech('t_camp'))return '研究「'+TECH.t_camp.n+'」が必要です';if(outs().length>=outMaxN())return '開拓地はこれ以上作れません（最大'+outMaxN()+'か所）';
  if(BLOCK.includes(ftile(x,y)))return 'ここには作れません';if(fdist(x,y)<CFG.outMin)return '拠点から'+CFG.outMin+'マス以上はなれた所に作れます';
  if(outs().some(o=>fdist(x-o.x,y-o.y)<CFG.outMin))return 'ほかの開拓地から'+CFG.outMin+'マス以上はなれた所に作れます';return ''}
 // 費用は荷物から先に使い、足りない分を個人倉庫から
