@@ -17,11 +17,12 @@ function removePlayer(id){G.players=G.players.filter(p=>p.id!==id)}
 function cinst(id,src){const c={u:++G.uid,id,up:0};if(src)c.src=src;return c}
 function setChar(p){const ch=CH[p.ch],g=gearOf(p)||gearFree(p);if(g){p.g=g.u;p.w=g.id;p.rm=RAR[g.r].m;p.gfx=g.fx}
  p.apas=null;SLOTL.forEach(sl=>{const ar=armorOf(p,sl);if(!ar){p[SLOTS[sl].k]=0;return}if(sl==='s'&&!shieldOk(p)){p.as=0;return}   // 両手武器なら盾を外す
- const s=armStat(ar),o=p.apas||(p.apas={aps:0});for(const k in ar.fx||{})o[k]=(o[k]||0)+ar.fx[k];o.maxhp=(o.maxhp||0)+s.hp;o.dmgRed=(o.dmgRed||0)+s.red;o.move=(o.move||0)+s.mv;o.blockStart=(o.blockStart||0)+s.blk;o.aps+=s.ps});   // 防具（頭・胴・足）の性能と追加効果をまとめる   // 装備（製作した実物）から武器・レアリティ倍率・追加効果を決める
- p.mhp=ch.hp;p.mps=ch.ps+(p.apas?p.apas.aps:0);p.eq=[p.w];p.deck=[cinst('punch'),cinst('guard'),cinst('guard'),cinst('step')];EQ[p.w].cards.forEach(id=>p.deck.push(cinst(id,p.w)));ch.extra.forEach(id=>p.deck.push(cinst(id)));
+ const s=armStat(ar),o=p.apas||(p.apas={aps:0});for(const k in ar.fx||{})o[k]=(o[k]||0)+ar.fx[k];o.maxhp=(o.maxhp||0)+s.hp;o.dmgRed=(o.dmgRed||0)+s.red;o.move=(o.move||0)+s.mv;o.blockStart=(o.blockStart||0)+s.blk;o.aps+=s.ps});
+ homeFx(p);   // 防具（頭・胴・足）の性能と追加効果をまとめる   // 装備（製作した実物）から武器・レアリティ倍率・追加効果を決める
+ p.mhp=ch.hp;p.mps=ch.ps+(p.apas?p.apas.aps:0);p.eq=[p.w];p.deck=[cinst('punch'),cinst('guard'),cinst('guard'),cinst('step')];EQ[p.w].cards.forEach(id=>p.deck.push(cinst(id,p.w)));ch.extra.forEach(id=>p.deck.push(cinst(id)));cupApply(p,p.deck);
  p.hp=maxHp(p);p.ps=p.mps;p.down=false;p.out=false;p.broken=false;p.rw=[];p.st={};p.blk=0;p.hand=[];p.draw=[];p.disc=[];p.exh=[]}
 function setWeapon(p,w){const old=p.w;let ups=p.deck.filter(c=>c.src===old&&c.up).length;const at=Math.max(0,p.deck.findIndex(c=>c.src===old));p.deck=p.deck.filter(c=>c.src!==old);
- p.deck.splice(at,0,...EQ[w].cards.map(id=>{const c=cinst(id,w);if(ups>0){c.up=1;ups--}return c}));p.w=w;p.eq=p.eq.map(i=>i===old?w:i)}
+ const nc=EQ[w].cards.map(id=>cinst(id,w));cupApply(p,nc);nc.forEach(c=>{if(!c.up&&ups>0){c.up=1;ups--}});p.deck.splice(at,0,...nc);p.w=w;p.eq=p.eq.map(i=>i===old?w:i)}
 /* ---------- パッシブ集計 ---------- */
 function pasList(p){const l=p.eq.map(i=>EQ[i].pas);if(CH[p.ch])l.push(CH[p.ch].pas);if(p.gfx)l.push(p.gfx);if(p.apas)l.push(p.apas);l.push(techFx());return l}
 function pstat(p,k){let v=0;pasList(p).forEach(s=>{if(s&&s[k])v+=s[k]});return v}
@@ -208,7 +209,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
  if(a.t==='walk'){if(G.phase==='field'&&fieldWalk(a.dx,a.dy,a.dt))HOOK.changed();return ''}
  switch(a.t){
   case 'char':if(G.phase==='prep'&&CH[a.c]){p.ch=a.c;setChar(p)}break;
-  case 'equip':case 'donate':case 'build':case 'research':case 'craft':case 'scrap':case 'job':er=baseAct(p,a);break;
+  case 'pbuild':case 'pup':case 'harvest':case 'equip':case 'donate':case 'build':case 'research':case 'craft':case 'scrap':case 'job':er=baseAct(p,a);break;
   case 'start':if(G.phase!=='prep')return '';startRun(typeof a.sp==='number'&&outs()[a.sp]?a.sp:-1);break;
   case 'move':er=moveP(p,a.x,a.y);break;
   case 'face':er=canAct(p);if(!er&&a.f>=0&&a.f<4)p.f=a.f;break;
@@ -216,7 +217,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
   case 'end':er=endTurn(p);break;
   case 'rescue':er=rescue(p,a.p);break;
   case 'skip':er=skipCombat();break;
-  case 'pick':{const r=p.rw[0];if(!r||G.phase!=='reward')return '';if(a.i!=null&&a.i>=0){const id=r.o[a.i];if(!id)return '';if(r.k==='card')p.deck.push(cinst(id));else{setWeapon(p,id);log(p.name+'は「'+EQ[id].n+'」を手に入れた。')}}p.rw.shift();if(!p.rw.length)p.done=true;break}
+  case 'pick':{const r=p.rw[0];if(!r||G.phase!=='reward')return '';if(a.up!=null&&r.k==='card'){const c=p.deck.find(x=>x.u===a.up&&!x.up);if(!c)return '強化できないカードです';c.up=1;log(p.name+'は「'+CARDS[c.id].n+'」を強化した。')}else if(a.i!=null&&a.i>=0){const id=r.o[a.i];if(!id)return '';if(r.k==='card')p.deck.push(cinst(id));else{setWeapon(p,id);log(p.name+'は「'+EQ[id].n+'」を手に入れた。')}}p.rw.shift();if(!p.rw.length)p.done=true;break}
   case 'gather':if(G.phase!=='field')return '';er=fieldGather(p.id);break;
   case 'return':er=fieldReturn();break;
   case 'outpost':er=fieldOutpost(p.id);break;

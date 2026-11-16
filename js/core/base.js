@@ -3,7 +3,7 @@
    共有＝G.world.base（施設・研究・住民・時間）と G.world.share（共有倉庫）／個人＝G.world.pl[プレイヤーID]（個人倉庫 store・装備 gear） */
 function ownerId(id){return String(id).replace(/_2$/,'')}   // 連れていく仲間（〜_2）は、持ち主の倉庫と装備を使う
 function ensureWorld(){const w=G.world;if(!w.pl)w.pl={};if(!w.share)w.share={};
- if(!w.base)w.base={t:0,acc:0,fac:{house:1},tech:{},res:null,bld:null,pop:CFG.popStart,food:CFG.foodStart,job:Object.assign({},CFG.jobPrio),frac:{}};w.v=2;return w}
+ if(!w.base)w.base={t:0,acc:0,fac:{house:1},tech:{},res:null,bld:null,pop:CFG.popStart,food:CFG.foodStart,job:Object.assign({},CFG.jobPrio),frac:{}};if(w.base.era==null)w.base.era=0;w.v=2;return w}
 function plOf(id){const w=ensureWorld(),o=ownerId(id);
  if(!w.pl[o]){const pl=w.pl[o]={store:{},gear:[],gu:0};CFG.startWeapons.forEach(i=>pl.gear.push({u:++pl.gu,id:i,r:0,fx:{}}));if(w.store){pl.store=w.store;delete w.store}}   // v0.2 の倉庫は個人倉庫へ引き継ぐ
  return w.pl[o]}
@@ -16,20 +16,25 @@ function armorOf(p,sl){const u=p[SLOTS[sl||'b'].k];return u?plOf(p.id).gear.find
 function facLv(id){return G.world.base.fac[id]||0}
 function hasTech(id){return !!(G.world.base&&G.world.base.tech[id])}
 function techFx(){const o={};if(!G.world.base)return o;for(const t in TECHFX)if(hasTech(t))for(const k in TECHFX[t])o[k]=(o[k]||0)+TECHFX[t][k];return o}
-function winHealRate(){return CFG.winHeal+(hasTech('t_fire')?CFG.fireHeal:0)}
-function eraReady(){return Object.keys(TECH).filter(t=>TECH[t].key).every(hasTech)}
+function winHealRate(){return CFG.winHeal+(hasTech('t_fire')?CFG.fireHeal:0)+(hasTech('t_salt')?.05:0)}
+function eraOf(){return (G&&G.world.base&&G.world.base.era)||0}
+function techEra(id){return TECH[id].era||0}
+function eraReady(e){if(e==null)e=eraOf();return Object.keys(TECH).filter(t=>TECH[t].key&&techEra(t)===e).every(hasTech)}
+// 今の時代の★重要技術がそろったら次の時代へ（次の時代がある時だけ）
+function eraCheck(){const b=G.world.base;let e=b.era||0;while(ERAS[e+1]&&eraReady(e)){e++;b.era=e;log('時代が「'+ERAS[e].n+'」に進んだ！');ev('era',{e})}}
+function techN(id){const t=TECH[id];return t.n+(techEra(id)>eraOf()?'（'+ERAS[techEra(id)].n+'）':'')}
 function canPay(st,cost){for(const m in cost)if((st[m]||0)<cost[m])return false;return true}
 function pay(st,cost){for(const m in cost)st[m]-=cost[m]}
-function shareCap(){return CFG.shareCap[0]+CFG.shareCap[1]*facLv('store')}
+function shareCap(){return CFG.shareCap[0]+CFG.shareCap[1]*facLv('store')+(hasTech('t_ice')?40:0)}
 function popCap(){return facLv('house')*3+1}
 /* ---------- 住民：優先度から自動で仕事に配置（することがない仕事には付かない） ---------- */
 function jobActive(j){const b=G.world.base;return j==='research'?!!b.res:j==='build'?!!b.bld:true}
 function jobAlloc(){const b=G.world.base,ks=Object.keys(JOBS),w=ks.map(j=>jobActive(j)?(b.job[j]||0):0),tot=w.reduce((a,c)=>a+c,0),out={};ks.forEach(j=>out[j]=0);if(!tot)return out;
  const ex=ks.map((j,i)=>b.pop*w[i]/tot);let left=b.pop;ks.forEach((j,i)=>{out[j]=Math.floor(ex[i]);left-=out[j]});
  ks.map((j,i)=>[ex[i]-out[j],w[i],j]).sort((a,c)=>c[0]-a[0]||c[1]-a[1]).forEach(r=>{if(left>0&&r[1]>0){out[r[2]]++;left--}});return out}
-function jobRate(j,n){const O=CFG.jobOut;return n*O[j]*(j==='farm'?1+CFG.farmLv*facLv('farm'):j==='research'?1+CFG.labLv*Math.max(0,facLv('lab')-1):1)}
+function jobRate(j,n){const O=CFG.jobOut;return n*O[j]*(j==='farm'?(1+CFG.farmLv*facLv('farm'))*(hasTech('t_irrig')?1.5:1):j==='research'?(1+CFG.labLv*Math.max(0,facLv('lab')-1))*(hasTech('t_writing')?1.25:1):1)}
 /* ---------- 時間：ゲーム内1時間ごとにまとめて計算 ---------- */
-function baseHour(){const b=G.world.base,sh=G.world.share,a=jobAlloc(),cap=shareCap();
+function baseHour(){const b=G.world.base,sh=G.world.share,a=jobAlloc(),cap=shareCap();eraCheck();
  if(b.food<cap)b.food=Math.min(cap,b.food+jobRate('farm',a.farm));b.food=Math.max(0,Math.round((b.food-b.pop*CFG.eat)*100)/100);
  const add=(m,v)=>{b.frac[m]=(b.frac[m]||0)+v;const n=Math.floor(b.frac[m]);if(n>0){b.frac[m]-=n;if((sh[m]||0)<cap)sh[m]=Math.min(cap,(sh[m]||0)+n)}};
  add('wood',jobRate('lumber',a.lumber));add('stone',jobRate('mine',a.mine));
@@ -39,15 +44,15 @@ function baseHour(){const b=G.world.base,sh=G.world.share,a=jobAlloc(),cap=share
 // sec＝進んだ現実の秒数。進んだゲーム内時間（時間）を返す
 function baseTick(sec){if(!G)return 0;const b=ensureWorld().base;b.acc=(b.acc||0)+sec*CFG.minPerSec;let n=0;while(b.acc>=60&&n<48){b.acc-=60;b.t+=60;baseHour();n++}return n}
 /* ---------- 製作：作るたびにレアリティと追加効果を抽選 ---------- */
-function rarOdds(){const lv=facLv('shop'),ws=RAR.map((r,i)=>i?r.p*(1+CFG.rarShop*Math.max(0,lv-1)):r.p),t=ws.reduce((a,c)=>a+c,0);return ws.map(w=>w/t)}
-function rollGear(id){const ws=rarOdds();let x=Math.random(),r=0;for(let i=0;i<ws.length;i++){x-=ws[i];if(x<0){r=i;break}}
+function rarOdds(pl){const lv=facLv('shop')+(pl&&pl.fac?(pl.fac.bench||0)*.5:0),ws=RAR.map((r,i)=>i?r.p*(1+CFG.rarShop*Math.max(0,lv-1)):r.p),t=ws.reduce((a,c)=>a+c,0);return ws.map(w=>w/t)}
+function rollGear(id,pl){const ws=rarOdds(pl);let x=Math.random(),r=0;for(let i=0;i<ws.length;i++){x-=ws[i];if(x<0){r=i;break}}
  const n=rng(RAR[r].fx[0],RAR[r].fx[1]),fx={};shuf(GFX.slice()).slice(0,n).forEach(g=>fx[g[0]]=g[1]);return {id,r,fx}}
 /* ---------- 共有分（共有倉庫・建築・研究・仕事）への操作。オンラインでは、参加者の操作をホストがこれで反映する ---------- */
 function shareOp(a){const w=ensureWorld(),b=w.base,sh=w.share;
  switch(a.t){
   case 'give':{const n=a.n|0;if(!MAT[a.m]||n<=0||n>99999)return '';sh[a.m]=(sh[a.m]||0)+n;return ''}
-  case 'build':{const f=FAC[a.id];if(!f)return '';const lv=facLv(a.id);if(lv>=f.cost.length)return 'これ以上は上げられません';if(b.bld)return '建築中の施設があります（建築は1つずつ）';if(f.need[lv]&&!hasTech(f.need[lv]))return '研究「'+TECH[f.need[lv]].n+'」が必要です';if(!canPay(sh,f.cost[lv]))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,f.cost[lv]);b.bld={id:a.id,w:0};return ''}
-  case 'research':{const t=TECH[a.id];if(!t||hasTech(a.id))return '';if(b.res)return '研究中の技術があります（研究は1つずつ）';if(facLv('lab')<t.lab)return '研究小屋Lv'+t.lab+'が必要です';if((t.req||[]).some(r=>!hasTech(r)))return '先に「'+(t.req||[]).filter(r=>!hasTech(r)).map(r=>TECH[r].n).join('・')+'」の研究が必要です';if(!canPay(sh,t.cost))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,t.cost);b.res={id:a.id,rp:0};return ''}
+  case 'build':{const f=FAC[a.id];if(!f||(f.era||0)>(b.era||0))return '';const lv=facLv(a.id);if(lv>=f.cost.length)return 'これ以上は上げられません';if(b.bld)return '建築中の施設があります（建築は1つずつ）';if(f.need[lv]&&!hasTech(f.need[lv]))return '研究「'+techN(f.need[lv])+'」が必要です';if(!canPay(sh,f.cost[lv]))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,f.cost[lv]);b.bld={id:a.id,w:0};return ''}
+  case 'research':{const t=TECH[a.id];if(!t||hasTech(a.id))return '';if(techEra(a.id)>(b.era||0))return 'まだ研究できない時代の技術です';if(b.res)return '研究中の技術があります（研究は1つずつ）';if(facLv('lab')<t.lab)return '研究小屋Lv'+t.lab+'が必要です';if((t.req||[]).some(r=>!hasTech(r)))return '先に「'+(t.req||[]).filter(r=>!hasTech(r)).map(r=>TECH[r].n).join('・')+'」の研究が必要です';if(!canPay(sh,t.cost))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,t.cost);b.res={id:a.id,rp:0};return ''}
   case 'outpost':{const x=a.x|0,y=a.y|0;if(!b.out)b.out=[];if(b.out.length>=CFG.outMax||b.out.some(o=>fdist(x-o.x,y-o.y)<CFG.outMin)||fdist(x,y)<CFG.outMin)return '';b.out.push({x,y});return ''}
   case 'job':{if(!JOBS[a.j])return '';b.job[a.j]=Math.max(0,Math.min(3,a.v|0));return ''}
  }
@@ -58,6 +63,7 @@ function baseAct(p,a){if(G.phase!=='prep')return '拠点でしかできません
   case 'equip':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearUsed(p,g.u))return '仲間が装備しています';if(ARM[g.id]){const k=SLOTS[ARM[g.id].sl].k;if(ARM[g.id].sl==='s'&&p[k]!==g.u&&!shieldOk(p))return '両手武器を持っているので、盾は装備できません';p[k]=p[k]===g.u?0:g.u}else p.g=g.u;setChar(p);return ''}   // 防具は、もう一度押すと外す
   case 'donate':{const m=a.m,have=pl.store[m]||0,n=a.n==='all'?have:Math.min(a.n|0,have);if(!MAT[m]||n<=0)return '寄付できる素材がありません';pl.store[m]-=n;const o={t:'give',m,n};shareOp(o);HOOK.op(o);ev('donate',{m,n});return ''}
   case 'build':case 'research':case 'job':{const er=shareOp(a);if(!er)HOOK.op(a);return er}
-  case 'craft':{const r=RECIPE[a.id];if(!r)return '';if(!hasTech(r.tech))return '研究「'+TECH[r.tech].n+'」が必要です';if(facLv('shop')<r.shop)return '工房Lv'+r.shop+'が必要です';if(pl.gear.length>=CFG.gearMax)return '装備がいっぱいです（いらない装備を手放してください）';if(!canPay(pl.store,r.cost))return '個人倉庫の素材が足りません';pay(pl.store,r.cost);const g=rollGear(a.id);g.u=++pl.gu;pl.gear.push(g);ev('craft',{id:g.id,r:g.r});return ''}
+  case 'craft':{const r=RECIPE[a.id];if(!r)return '';if(!hasTech(r.tech))return '研究「'+TECH[r.tech].n+'」が必要です';if(facLv('shop')<r.shop)return '工房Lv'+r.shop+'が必要です';if(r.forge&&facLv('forge')<r.forge)return '炉Lv'+r.forge+'が必要です';if(pl.gear.length>=gearMaxOf(pl))return '装備がいっぱいです（いらない装備を手放してください）';if(!canPay(pl.store,r.cost))return '個人倉庫の素材が足りません';pay(pl.store,r.cost);const g=rollGear(a.id,pl);g.u=++pl.gu;pl.gear.push(g);ev('craft',{id:g.id,r:g.r});return ''}
+  case 'pbuild':case 'pup':case 'harvest':return homeAct(p,pl,a);
   case 'scrap':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearInUse(p,g.u))return '装備中の物は手放せません';pl.gear=pl.gear.filter(x=>x!==g);return ''}}
  return ''}

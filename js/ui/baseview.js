@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ 拠点の画面（出発・倉庫・建築・研究・製作・住民）。タブで切り替える */
-const TABS=[['go','⚔️出発'],['store','📦倉庫'],['build','🏗️建築'],['tech','🔬研究'],['craft','🔨製作'],['people','👥住民']];
+const TABS=[['go','⚔️出発'],['store','📦倉庫'],['build','🏗️建築'],['tech','🔬研究'],['craft','🔨製作'],['people','👥住民'],['home','🏠自分の家']];
 function timeH(){const b=G.world.base;return (Math.floor(b.t/1440)+1)+'日目 '+(Math.floor(b.t/60)%24)+'時'}
 // 必要な素材（st＝支払う倉庫。足りない物は赤）
 function costH(cost,st){return Object.keys(cost).map(m=>`<span class="${(st[m]||0)<cost[m]?'ng':''}">${MAT[m].em}${MAT[m].n} ${st[m]||0}/${cost[m]}</span>`).join('　')}
@@ -10,7 +10,7 @@ function etaH(left,rate){return rate>0?'あと約'+Math.ceil(left/rate)+'時間�
 function vPrep(){const b=G.world.base,t=ui.tab||'go',top=`<div class="top"><b>🛖 拠点</b><span>${timeH()}</span><span>👥${b.pop}</span><span>🍖${Math.floor(b.food)}</span>${Net.role?`<span>${Net.role==='host'?'👑':Net.conn?'🔗':'⏳'}${Net.members().length}人</span>`:''}<span class="sp"></span>${ui.panel?btn('tTown','🏘️ 町へ',{c:'sm',b:1}):''}${btn('ovHelp','？',{c:'sm'})}${btn('ovMenu','☰',{c:'sm',b:ui.panel?0:1})}</div>`;
  if(!ui.panel)return top+`<div class="main">${vTown()}</div>`;   // 歩ける町。建物に入ると下のタブの画面になる
  return top+`<div class="tabs">${TABS.map(x=>btn('tab',x[1],{i:x[0],c:'sm '+(t===x[0]?'on':'')})).join('')}</div>
- <div class="pane scroll" data-sc="base-${t}">${({go:tGo,store:tStore,build:tBuild,tech:tTech,craft:tCraft,people:tPeople}[t]||tGo)()}</div>`}
+ <div class="pane scroll" data-sc="base-${t}">${({go:tGo,store:tStore,build:tBuild,tech:tTech,craft:tCraft,people:tPeople,home:tHome}[t]||tGo)()}</div>`}
 /* ---------- 出発 ---------- */
 // 同じ世界にいる仲間の様子（オンライン）
 function matesH(){const ms=mates();if(!ms.length)return '';return `<div class="box col"><div class="hd">🔗 同じ世界の仲間</div>${ms.map(m=>`<div class="it"><div class="tx">${m.s?m.s.em:'🙂'} <b>${m.h?'👑':''}${esc(m.name)}</b>　${stH(m.s)}</div></div>`).join('')}<div class="small">冒険はそれぞれ別々です。冒険中の仲間は、フィールドと地図に🔵で表示されます。</div></div>`}
@@ -33,23 +33,23 @@ function tStore(){const pl=plOf(MY),sh=G.world.share,ks=Object.keys(MAT).filter(
 /* ---------- 建築 ---------- */
 function tBuild(){const b=G.world.base,sh=G.world.share,a=jobAlloc();let h='';
  if(b.bld){const f=FAC[b.bld.id],wk=f.work[facLv(b.bld.id)];h+=`<div class="box col"><div class="hd">建築中：${f.em}${f.n} Lv${facLv(b.bld.id)+1}</div>${pgH(b.bld.w,wk)}<div class="small">建築担当 ${a.build}人　${etaH(wk-b.bld.w,jobRate('build',a.build))}</div></div>`}
- h+=`<div class="box col"><div class="hd">施設</div>${Object.keys(FAC).map(id=>{const f=FAC[id],lv=facLv(id),mx=lv>=f.cost.length,nd=!mx&&f.need[lv]&&!hasTech(f.need[lv]);
-  return `<div class="it"><div class="tx"><b>${f.em}${f.n}</b> ${lv?'Lv'+lv:'（まだ無い）'}<br><span class="small">${f.d}</span>${mx?'':`<br><span class="small">${lv?'Lv'+(lv+1)+'へ':'建てる'}：${costH(f.cost[lv],sh)}${nd?`　<span class="ng">研究「${TECH[f.need[lv]].n}」が必要</span>`:''}</span>`}</div>${mx?'<span class="small">最大</span>':btn('build',lv?'Lvを上げる':'建てる',{i:id,c:'sm '+(nd||b.bld||!canPay(sh,f.cost[lv])?'dim':'pri')})}</div>`}).join('')}</div>
+ h+=`<div class="box col"><div class="hd">施設</div>${Object.keys(FAC).filter(id=>(FAC[id].era||0)<=eraOf()).map(id=>{const f=FAC[id],lv=facLv(id),mx=lv>=f.cost.length,nd=!mx&&f.need[lv]&&!hasTech(f.need[lv]);
+  return `<div class="it"><div class="tx"><b>${f.em}${f.n}</b> ${lv?'Lv'+lv:'（まだ無い）'}<br><span class="small">${f.d}</span>${mx?'':`<br><span class="small">${lv?'Lv'+(lv+1)+'へ':'建てる'}：${costH(f.cost[lv],sh)}${nd?`　<span class="ng">研究「${techN(f.need[lv])}」が必要</span>`:''}</span>`}</div>${mx?'<span class="small">最大</span>':btn('build',lv?'Lvを上げる':'建てる',{i:id,c:'sm '+(nd||b.bld||!canPay(sh,f.cost[lv])?'dim':'pri')})}</div>`}).join('')}</div>
  <div class="small">素材は共有倉庫から使います（倉庫タブで寄付）。建築は1つずつ、建築担当の住民が進めます。</div>`;return h}
 /* ---------- 研究 ---------- */
-function tTech(){const b=G.world.base,sh=G.world.share,a=jobAlloc(),keys=Object.keys(TECH).filter(t=>TECH[t].key);let h='';
+function tTech(){const b=G.world.base,sh=G.world.share,a=jobAlloc(),keys=Object.keys(TECH).filter(t=>TECH[t].key&&techEra(t)===eraOf());let h='';
  if(b.res){const t=TECH[b.res.id];h+=`<div class="box col"><div class="hd">研究中：${t.n}</div>${pgH(b.res.rp,t.rp)}<div class="small">研究担当 ${a.research}人　${etaH(t.rp-b.res.rp,jobRate('research',a.research))}</div></div>`}
  else if(!facLv('lab'))h+='<div class="box small" style="text-align:center">研究するには、まず建築タブで「🔬研究小屋」を建ててください。</div>';
- h+=`<div class="box col"><div class="hd">技術（${ERAS[0].n}）</div>${Object.keys(TECH).map(id=>{const t=TECH[id],done=hasTech(id),cur=b.res&&b.res.id===id,rq=(t.req||[]).filter(r=>!hasTech(r)),ng=facLv('lab')<t.lab||rq.length||!canPay(sh,t.cost)||b.res;
+ for(let e=eraOf();e>=0;e--)h+=`<div class="box col"><div class="hd">技術（${ERAS[e].n}）${e<eraOf()?' <span class="small">前の時代</span>':''}</div>${Object.keys(TECH).filter(id=>techEra(id)===e).map(id=>{const t=TECH[id],done=hasTech(id),cur=b.res&&b.res.id===id,rq=(t.req||[]).filter(r=>!hasTech(r)),ng=facLv('lab')<t.lab||rq.length||!canPay(sh,t.cost)||b.res;
   return `<div class="it"><div class="tx"><b>${done?'✅':cur?'⏳':''}${t.n}</b>${t.key?' <span style="color:#ffd870">★重要</span>':''} <span class="small">${FIELD6[t.f]}</span><br><span class="small">${t.d}${done||cur?'':`<br>研究ポイント${t.rp}・${costH(t.cost,sh)}${facLv('lab')<t.lab?`　<span class="ng">研究小屋Lv${t.lab}が必要</span>`:''}${rq.length?`　<span class="ng">先に「${rq.map(r=>TECH[r].n).join('・')}」</span>`:''}`}</span></div>${done?'<span class="small">研究済み</span>':cur?'<span class="small">研究中</span>':btn('research','研究する',{i:id,c:'sm '+(ng?'dim':'pri')})}</div>`}).join('')}</div>
- <div class="box small" style="text-align:center">★重要技術 ${keys.filter(hasTech).length}/${keys.length}　${eraReady()?'すべて研究しました！次の時代へ進めます（次の時代は今後のアップデートで追加します）':'すべて研究すると次の時代へ進めます'}</div>`;return h}
+ <div class="box small" style="text-align:center">${ERAS[eraOf()].n}の★重要技術 ${keys.filter(hasTech).length}/${keys.length}　${eraReady()?(ERAS[eraOf()+1]?'すべて研究しました！まもなく次の時代へ進みます':'すべて研究しました！次の時代は今後のアップデートで追加します'):'すべて研究すると次の時代へ進めます'}</div>`;return h}
 /* ---------- 製作 ---------- */
-function tCraft(){const p=me(),pl=plOf(p.id),lv=facLv('shop'),od=rarOdds();let h='';
+function tCraft(){const p=me(),pl=plOf(p.id),lv=facLv('shop'),od=rarOdds(pl),fl=facLv('forge');let h='';
  if(!lv)h+='<div class="box small" style="text-align:center">製作するには、まず建築タブで「🔨工房」を建ててください。</div>';
- h+=`<div class="box small" style="text-align:center">レアリティの出やすさ${lv?'（工房Lv'+lv+'）':''}：${RAR.map((r,i)=>`<span style="color:${r.c}">${r.n}${(od[i]*100).toFixed(od[i]<.1?1:0)}%</span>`).join(' ')}</div>
- ${[['武器の製作',id=>EQ[id]],['防具（頭）の製作',id=>ARM[id]&&ARM[id].sl==='h'],['防具（胴）の製作',id=>ARM[id]&&ARM[id].sl==='b'],['防具（足）の製作',id=>ARM[id]&&ARM[id].sl==='f'],['盾の製作',id=>ARM[id]&&ARM[id].sl==='s']].map(([hd,ok])=>`<div class="box col"><div class="hd">${hd}</div>${Object.keys(RECIPE).filter(ok).map(id=>{const r=RECIPE[id],e=itemOf(id),nt=!hasTech(r.tech),ns=lv<r.shop;
-  return `<div class="it"><div class="tx"><b>${e.em}${e.n}</b><br><span class="small">${EQ[id]?wInfo(e).split('<br>')[0]:armInfo({id,r:0})+'（コモン）'}<br>${costH(r.cost,pl.store)}${nt?`　<span class="ng">研究「${TECH[r.tech].n}」が必要</span>`:''}${ns?`　<span class="ng">工房Lv${r.shop}が必要</span>`:''}</span></div>${btn('craft','製作',{i:id,c:'sm '+(nt||ns||!canPay(pl.store,r.cost)?'dim':'pri')})}</div>`}).join('')}</div>`).join('')}
- <div class="box col"><div class="hd">持っている装備（${pl.gear.length}/${CFG.gearMax}）</div>${pl.gear.map(g=>{const eq=gearInUse(p,g.u);
+ h+=`<div class="box small" style="text-align:center">レアリティの出やすさ${lv?'（工房Lv'+lv+(pfLv(pl,'bench')?'・作業台Lv'+pfLv(pl,'bench'):'')+'）':''}：${RAR.map((r,i)=>`<span style="color:${r.c}">${r.n}${(od[i]*100).toFixed(od[i]<.1?1:0)}%</span>`).join(' ')}</div>
+ ${[['武器の製作',id=>EQ[id]],['防具（頭）の製作',id=>ARM[id]&&ARM[id].sl==='h'],['防具（胴）の製作',id=>ARM[id]&&ARM[id].sl==='b'],['防具（足）の製作',id=>ARM[id]&&ARM[id].sl==='f'],['盾の製作',id=>ARM[id]&&ARM[id].sl==='s']].map(([hd,ok])=>`<div class="box col"><div class="hd">${hd}</div>${Object.keys(RECIPE).filter(id=>ok(id)&&techEra(RECIPE[id].tech)<=eraOf()).map(id=>{const r=RECIPE[id],e=itemOf(id),nt=!hasTech(r.tech),ns=lv<r.shop||(r.forge&&fl<r.forge);
+  return `<div class="it"><div class="tx"><b>${e.em}${e.n}</b><br><span class="small">${EQ[id]?wInfo(e).split('<br>')[0]:armInfo({id,r:0})+'（コモン）'}<br>${costH(r.cost,pl.store)}${nt?`　<span class="ng">研究「${TECH[r.tech].n}」が必要</span>`:''}${lv<r.shop?`　<span class="ng">工房Lv${r.shop}が必要</span>`:''}${r.forge&&fl<r.forge?`　<span class="ng">炉Lv${r.forge}が必要</span>`:''}</span></div>${btn('craft','製作',{i:id,c:'sm '+(nt||ns||!canPay(pl.store,r.cost)?'dim':'pri')})}</div>`}).join('')}</div>`).join('')}
+ <div class="box col"><div class="hd">持っている装備（${pl.gear.length}/${gearMaxOf(pl)}）</div>${pl.gear.map(g=>{const eq=gearInUse(p,g.u);
   return `<div class="it"><div class="tx"><b>${itemOf(g.id).em}${itemOf(g.id).n}</b> ${gearFxH(g)}${ARM[g.id]?'<br><span class="small">'+armInfo(g)+'</span>':''}${eq?' <span class="small">（装備中）</span>':''}</div>${eq?'':btn('scrap','手放す',{i:g.u,c:'sm'})}</div>`}).join('')}</div>
  <div class="small">素材は個人倉庫から使います。装備の変更は「出発」タブで。</div>`;return h}
 /* ---------- 住民 ---------- */
@@ -61,4 +61,14 @@ Object.assign(ACT,{
  tab(i){ui.tab=i},equip(i){sendAct({t:'equip',g:+i})},unarm(i){const p=me(),u=p&&SLOTS[i]&&p[SLOTS[i].k];if(u)sendAct({t:'equip',g:u})},
  donate(i){const [m,n]=i.split(':');sendAct({t:'donate',m,n:n==='all'?'all':+n})},
  build(i){sendAct({t:'build',id:i})},research(i){sendAct({t:'research',id:i})},craft(i){sendAct({t:'craft',id:i})},scrap(i){sendAct({t:'scrap',g:+i})},
- job(i){const [j,v]=i.split(':');sendAct({t:'job',j,v:+v})}});
+ job(i){const [j,v]=i.split(':');sendAct({t:'job',j,v:+v})},
+ pbuild(i){sendAct({t:'pbuild',id:i})},pup(i){sendAct({t:'pup',id:i})},harvest(){sendAct({t:'harvest'})}});
+/* ---------- 自分の家（個人施設・カードの永久強化） ---------- */
+function tHome(){const p=me(),pl=plOf(p.id),st=pl.store;let h='';
+ h+=`<div class="box col"><div class="hd">🏠 自分の施設</div><div class="small">自分だけの施設です。個人倉庫の素材を使い、すぐに建ちます。</div>${Object.keys(PFAC).map(id=>{const f=PFAC[id],lv=pfLv(pl,id),mx=lv>=f.cost.length,nd=!mx&&f.need[lv]&&!hasTech(f.need[lv]);
+  return `<div class="it"><div class="tx"><b>${f.em}${f.n}</b> ${lv?'Lv'+lv:'（まだ無い）'}<br><span class="small">${f.d}</span>${mx?'':`<br><span class="small">${lv?'Lv'+(lv+1)+'へ':'建てる'}：${costH(f.cost[lv],st)}${nd?`　<span class="ng">研究「${techN(f.need[lv])}」が必要</span>`:''}</span>`}</div>${mx?'<span class="small">最大</span>':btn('pbuild',lv?'Lvを上げる':'建てる',{i:id,c:'sm '+(nd||!canPay(st,f.cost[lv])?'dim':'pri')})}</div>`}).join('')}</div>`;
+ if(pfLv(pl,'garden')){const o=harvestOut(pl),d=harvestDays(pl);h+=`<div class="box col"><div class="hd">🪴 家庭菜園</div><div class="small">${d?d+'日分たまっています：'+matList(o):'まだ実っていません（1日ごとに実ります。7日分までたまります）'}</div><div class="row">${btn('harvest','🧺 収穫する',{c:d?'pri':'dim'})}</div></div>`}
+ const tl=pfLv(pl,'train'),full=cupN(pl)>=cupMax(pl),cc=cupCost(cupN(pl));
+ h+=`<div class="box col"><div class="hd">🥋 カードの永久強化（${cupN(pl)}/${cupMax(pl)}種類）</div>${tl?`<div class="small">今のキャラクター（${CH[p.ch].n}）と武器（${EQ[p.w].n}）で、冒険の最初のデッキに入るカードを強化できます。同じカードなら、別の武器・キャラクターでも強化済みになります。${full?'<span class="ng">鍛錬場のLvを上げると、もっと強化できます</span>':'次の強化の素材：'+costH(cc,st)}</div>
+ <div class="grid">${baseCards(p).map(id=>{const done=pl.cup&&pl.cup[id];return `<div class="col" style="align-items:center">${cardH(p,{id,up:1})}${done?'<span class="small">✅強化済み</span>':btn('pup','強化する',{i:id,c:'sm '+(full||!canPay(st,cc)?'dim':'pri')})}</div>`}).join('')}</div><div class="small">カードは強化後の性能で表示しています。</div>`:'<div class="small">🥋鍛錬場を建てると、カードを永久に強化できます。</div>'}</div>`;
+ return h}
