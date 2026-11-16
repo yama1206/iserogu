@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.12.2';
+const VERSION='0.13.0';
 const CFG={
  deckMax:20,      // v0.11.2：冒険中のデッキの上限（超える時は入れ替え）
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
