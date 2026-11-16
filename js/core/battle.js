@@ -191,11 +191,12 @@ function skipEst(){const cb=G.cb,ps=G.players.filter(p=>p.hp>0);if(cb.kind!=='n'
  const turns=Math.ceil(ehp/Math.max(1,dpt)),take=Math.round(edmg*turns*CFG.skipDmg),hp=ps.reduce((a,p)=>a+p.hp,0);return turns<=CFG.skipTurns&&take<=hp*CFG.skipHp?{turns,take}:null}
 function skipCombat(){const cb=G.cb;if(G.phase!=='combat'||cb.ph!=='p'||!cb.skip||cb.turn!==1)return '今はスキップできません';const ps=alivePs(),d=Math.ceil(cb.skip.take/ps.length);
  ps.forEach(p=>{p.hp=Math.max(1,p.hp-d)});cb.en.forEach(e=>{e.hp=0});log('戦闘をスキップした（'+cb.skip.take+'ダメージを受けた）。');winCombat();return ''}
-function winCombat(){const cb=G.cb,st={k:cb.kind},fd=G.fd,got={};ev('win');
+function winCombat(){const cb=G.cb,fd=G.fd;ev('win');
  G.players.forEach(p=>{if(p.down||p.out){p.down=false;p.out=false;p.hp=Math.max(1,Math.ceil(maxHp(p)*CFG.afterDownPct))}else p.hp=Math.min(maxHp(p),p.hp+Math.ceil(maxHp(p)*winHealRate()));
   p.st={};p.blk=0;p.broken=false;p.ps=p.mps;p.resc=null;p.hand=[];p.draw=[];p.disc=[];p.exh=[];p.done=false;p.rw=[];
   p.rw.push({k:'card',o:rollCards(p,3)})});
- cb.en.forEach(e=>{const d=DROP[e.id];if(d&&Math.random()<d[2]){addBag(d[0],d[1]);got[d[0]]=(got[d[0]]||0)+d[1]}});if(Object.keys(got).length)ev('drop',{o:got});
+ // 戦利品は1人ずつ抽選（合流した仲間はそれぞれの荷物へ）
+ G.players.forEach((p,i)=>{if(i&&!p.net)return;const got={};cb.en.forEach(e=>{const d=DROP[e.id];if(d&&Math.random()<d[2]){addBag(d[0],d[1],i?p.id:null);got[d[0]]=(got[d[0]]||0)+d[1]}});if(Object.keys(got).length)ev('drop',{o:got,p:p.id})});
  if(cb.fix!=null)fd.dead[cb.fix]=1;fd.wins++;fd.grace=CFG.encGrace;log('戦闘に勝利した！');G.cb=null;G.phase='reward'}
 // 敵の攻撃が届く範囲（行動予告の表示用）
 function dangerOf(e){const d=EN[e.id],m=e.it?d.moves[e.it.m]:null,out={};if(!m||e.broken||e.st.stun>0||!'aA'.includes(m[0]))return out;const rg=m[0]==='A'?(d.ar||d.rg):d.rg,rm=reachOf(e,d.mv),N=CFG.grid;
@@ -214,7 +215,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
   case 'rescue':er=rescue(p,a.p);break;
   case 'skip':er=skipCombat();break;
   case 'pick':{const r=p.rw[0];if(!r||G.phase!=='reward')return '';if(a.i!=null&&a.i>=0){const id=r.o[a.i];if(!id)return '';if(r.k==='card')p.deck.push(cinst(id));else{setWeapon(p,id);log(p.name+'は「'+EQ[id].n+'」を手に入れた。')}}p.rw.shift();if(!p.rw.length)p.done=true;break}
-  case 'gather':if(G.phase!=='field')return '';er=fieldGather();break;
+  case 'gather':if(G.phase!=='field')return '';er=fieldGather(p.id);break;
   case 'return':er=fieldReturn();break;
   case 'restart':if(!['over','home'].includes(G.phase))return '';G.phase='prep';G.cb=null;G.fd=null;G.players.forEach(setChar);break;
   default:return ''}

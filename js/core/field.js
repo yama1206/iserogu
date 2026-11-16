@@ -29,7 +29,9 @@ function seenAt(x,y){return !!G.world.seen[(y>>2)*(CFG.worldN>>2)+(x>>2)]}
 function reveal(){const fd=G.fd,se=G.world.seen,B=CFG.worldN>>2;let ch=false;for(let by=0;by<B;by++)for(let bx=0;bx<B;bx++){const i=by*B+bx;if(!se[i]&&Math.hypot(bx*4+2-fd.x,by*4+2-fd.y)<=CFG.sight){se[i]=1;ch=true}}if(ch)G.world.sv=(G.world.sv||0)+1;return ch}
 function fieldStart(){const W=genWorld(G.world.seed),B=CFG.worldN>>2;if(!Array.isArray(G.world.seen)||G.world.seen.length!==B*B)G.world.seen=Array(B*B).fill(0);
  G.fd={x:W.c+.5,y:W.c+1.5,fl:false,bk:false,steps:0,enc:CFG.encBase,grace:CFG.encGrace,bag:{},taken:{},dead:{},wins:0,home:null,lost:null};G.cb=null;G.phase='field';reveal();log('冒険に出発した。');ev('fstart')}
-function addBag(m,n){G.fd.bag[m]=(G.fd.bag[m]||0)+n}
+// 荷物：自分＝fd.bag／合流した仲間＝fd.pb[プレイヤーID]（リーダーの端末が預かる）
+function bagOf(pid){const fd=G.fd;if(!pid||pid===G.players[0].id)return fd.bag;if(!fd.pb)fd.pb={};return fd.pb[pid]||(fd.pb[pid]={})}
+function addBag(m,n,pid){const b=bagOf(pid);b[m]=(b[m]||0)+n}
 function fieldEnc(st){G.fd.enc=CFG.encBase;ev('enc');startCombat(st)}
 function rollEnc(x,y){const W=WORLD,field=W.reg[y][x]?'forest':'grass',T=ENC[field],d=Math.max(Math.abs(x-W.c),Math.abs(y-W.c));
  if(d>=CFG.eliteDist&&Math.random()<CFG.eliteRate)return {k:'e',en:[pick(T.elite)],field};
@@ -45,7 +47,7 @@ function fieldWalk(dx,dy,dt){const fd=G.fd,W=WORLD;dx=Math.sign(dx||0);dy=Math.s
 // いちばん近い採集ポイント（触れている物）
 function fieldNear(){const fd=G.fd,W=WORLD;if(!fd||!W)return null;let best=null,bd=1.05;const cx=Math.floor(fd.x),cy=Math.floor(fd.y);
  for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++){const key=x+','+y,m=W.nodes[key];if(!m||fd.taken[key])continue;const d=Math.hypot(x+.5-fd.x,y+.5-fd.y);if(d<bd){bd=d;best={key,m}}}return best}
-function fieldGather(){const n=fieldNear();if(!n)return '近くに採集できる物がありません';const c=rng(CFG.gatherN[0],CFG.gatherN[1]);G.fd.taken[n.key]=1;addBag(n.m,c);ev('gather',{m:n.m,n:c});return ''}
+function fieldGather(pid){const n=fieldNear();if(!n)return '近くに採集できる物がありません';const c=rng(CFG.gatherN[0],CFG.gatherN[1]);G.fd.taken[n.key]=1;addBag(n.m,c,pid);ev('gather',{m:n.m,n:c,p:pid});return ''}
 // 荷物を倉庫へ（rate＝失う割合。強制帰還のとき）
 function bagHome(rate){const fd=G.fd,st=plOf(G.players[0].id).store;fd.home={};fd.lost={};for(const m in fd.bag){const n=fd.bag[m],l=Math.round(n*rate);if(l)fd.lost[m]=l;if(n-l>0){fd.home[m]=n-l;st[m]=(st[m]||0)+n-l}}fd.bag={}}
 function fieldReturn(){if(G.phase!=='field')return '今は帰還できません';bagHome(0);G.phase='home';log('拠点に帰還した。荷物を個人倉庫に入れた。');ev('ret');return ''}

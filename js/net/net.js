@@ -7,6 +7,7 @@
      共有分への操作（寄付・建築・研究・仕事）は手元で先に反映し、同じ操作をホストへ送る（shareOp）
    ・やりとり　参加者→ホスト：hi（入る）/ pl（個人分）/ op（共有分への操作）/ seen（地図）
    　　　　　　ホスト→参加者：w（世界まるごと＋参加者の一覧）/ ms（全員の様子）/ ping / no（入れない理由）
+   ・第4段階（合流）：rl＝ほかの人あてのメッセージ。参加者→ホスト {t:'rl',to,m}／ホスト→参加者 {t:'rl',f:送り主,m}。中身は party.js
    ・第3段階：参加者→ホスト：st（自分の様子＝拠点・探索・戦闘、地図上の位置、HP）。ホストは全員ぶんをまとめて ms で配る */
 const PEER_SRC='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -20,7 +21,7 @@ const Net={role:null,code:null,peer:null,nonce:'',off:0,hbOk:0,host:null,conn:nu
   return this.ms.map(m=>m.pid===MY?Object.assign({},m,{s:myStat()}):m)},
  // 届いた「様子」を確かめる（おかしな値は捨てる）
  okSt(s){if(!s||typeof s!=='object'||!['b','f','c'].includes(s.w))return null;const n=v=>typeof v==='number'&&isFinite(v)?v:undefined;
-  return {w:s.w,em:String(s.em||'🙂').slice(0,4),hp:n(s.hp),mh:n(s.mh),x:n(s.x),y:n(s.y),k:s.k==='b'?'b':s.k==='s'?'s':undefined}},
+  return {w:s.w,em:String(s.em||'🙂').slice(0,4),hp:n(s.hp),mh:n(s.mh),x:n(s.x),y:n(s.y),k:s.k==='b'?'b':s.k==='s'?'s':undefined,pt:typeof s.pt==='string'?s.pt.slice(0,14):undefined,pn:n(s.pn)}},
  canSave(){return !this.role||(this.role==='host'&&Date.now()-this.hbOk<CFG.netTtl)},
  /* ---------- PeerJS ---------- */
  loadLib(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement('script');s.src=PEER_SRC;s.onload=()=>res();s.onerror=()=>rej(new Error('lib'));document.head.appendChild(s);setTimeout(()=>rej(new Error('lib')),10000)})},
@@ -53,7 +54,8 @@ const Net={role:null,code:null,peer:null,nonce:'',off:0,hbOk:0,host:null,conn:nu
    if(m.t==='no')return fail(m.why||'入れませんでした',true);
    if(m.t==='w'){if(!done){done=true;clearTimeout(tm);this._pf=null;this.conn=c;this.role='guest';this.host=h;this.st='';this.sentPl=this.sentSeen=this.sentSt='';res(m.w)}
     if(this.conn!==c)return;this.ms=m.ms||[];if(G&&scr==='game')netApply(m.w)}
-   else if(m.t==='ms'&&this.conn===c&&Array.isArray(m.ms)){this.ms=m.ms;netMates(this.members())}});
+   else if(m.t==='ms'&&this.conn===c&&Array.isArray(m.ms)){this.ms=m.ms;netMates(this.members())}
+   else if(m.t==='rl'&&this.conn===c)Party.rx(String(m.f||''),m.m)});
   c.on('close',()=>{if(!done)fail('close');else this.lost(c)});c.on('error',e=>{if(!done)fail(e)})})},
  /* ---------- 参加者：ホストが消えた時 ---------- */
  lost(c){if(this.conn!==c||this.role!=='guest')return;this.conn=null;this.st='ホストを探しています…';this.rejoin()},
@@ -86,7 +88,11 @@ const Net={role:null,code:null,peer:null,nonce:'',off:0,hbOk:0,host:null,conn:nu
   if(m.t==='pl'){if(this.okPl(m.pl)){G.world.pl[g.pid]=m.pl;Cloud.mark();this.flushSoon()}}
   else if(m.t==='op'){if(m.a&&typeof m.a==='object'){shareOp(m.a);Cloud.mark();this.flushSoon();this.sendW();netRefresh()}}
   else if(m.t==='seen')this.orSeen(m.seen)
-  else if(m.t==='st'){g.s=this.okSt(m.s);this.sendMs()}},
+  else if(m.t==='st'){g.s=this.okSt(m.s);this.sendMs()}
+  else if(m.t==='rl'){const to=String(m.to||'');if(to===MY)Party.rx(g.pid,m.m);else{const g2=this.gs.find(x=>x.pid===to);if(g2)try{g2.c.send({t:'rl',f:g.pid,m:m.m})}catch(e){}}}},
+ // 第4段階：ほかの人へのメッセージ（参加者どうしはホストが中継する）
+ to(pid,m){if(this.role==='host'){const g=this.gs.find(x=>x.pid===pid);if(!g||!g.c.open)return false;try{g.c.send({t:'rl',f:MY,m});return true}catch(e){return false}}
+  if(this.role==='guest'&&this.conn&&this.conn.open){this.tx({t:'rl',to:pid,m});return true}return false},
  orSeen(s){if(!Array.isArray(s)||!G)return;const w=G.world,o=Array.isArray(w.seen)?w.seen:[];let ch=false;
   if(o.length!==s.length){if(s.length>o.length){w.seen=s.slice();ch=true}}else for(let i=0;i<s.length;i++)if(s[i]&&!o[i]){o[i]=1;ch=true}
   if(ch){w.sv=(w.sv||0)+1;Cloud.mark()}},
