@@ -39,16 +39,16 @@ function ftile(x,y){const C=CFG.chunk,cx=Math.floor(x/C),cy=Math.floor(y/C),W=wl
 function fblock(x,y){return BLOCK.includes(ftile(Math.floor(x),Math.floor(y)))}
 function fhit(x,y){const r=.28;return fblock(x-r,y-r)||fblock(x+r,y-r)||fblock(x-r,y+r)||fblock(x+r,y+r)}
 // 区画の強敵・ボス（区画に0か1体）。key＝"x,y"（倒したかどうかは fd.dead[key]）
-function chunkFixed(cx,cy){const W=wld(),key=cx+','+cy;if(W.fx.has(key))return W.fx.get(key);if(W.fx.size>5000)W.fx.clear();let f=null;const C=CFG.chunk,s=W.s;
+function chunkFixed(cx,cy){const W=wld(),key=cx+','+cy;if(W.fe!==eraOf()){W.fx.clear();W.fe=eraOf()}if(W.fx.has(key))return W.fx.get(key);if(W.fx.size>5000)W.fx.clear();let f=null;const C=CFG.chunk,s=W.s;
  const d=fdist(cx*C+C/2,cy*C+C/2),r=hsh(cx,cy,s+50);let k=null;if(d>=CFG.bossDist&&r>1-CFG.bossChunk)k='b';else if(d>=14&&r<CFG.eliteChunk)k='e';
  if(k)for(let t=0;t<14;t++){const x=cx*C+2+Math.floor(hsh(cx*31+t,cy,s+51)*(C-4)),y=cy*C+2+Math.floor(hsh(cx,cy*31+t,s+52)*(C-4));if(BLOCK.includes(ftile(x,y)))continue;
-  const b=biomeAt(x,y),B=BIO[b],ls=k==='b'?B.boss:B.elite;f={x,y,k,key:x+','+y,en:[ls[Math.floor(hsh(x,y,s+53)*ls.length)]],field:b,lv:dangerAt(x,y)};break}
+  const b=biomeAt(x,y),ls=bioL(b,k==='b'?'boss':'elite');f={x,y,k,key:x+','+y,en:[ls[Math.floor(hsh(x,y,s+53)*ls.length)]],field:b,lv:dangerAt(x,y)};break}
  W.fx.set(key,f);return f}
 function fixedNear(x,y,rad){const C=CFG.chunk,o=[];for(let cy=Math.floor((y-rad)/C);cy<=Math.floor((y+rad)/C);cy++)for(let cx=Math.floor((x-rad)/C);cx<=Math.floor((x+rad)/C);cx++){const f=chunkFixed(cx,cy);if(f)o.push(f)}return o}
 // 採集ポイント（そのマスの素材。なければ null）
 function nodeAt(x,y){if(fdist(x,y)<=3)return null;const s=wld().s;if(hsh(x,y,s+9)>=CFG.nodeRate)return null;const t=ftile(x,y);if(BLOCK.includes(t))return null;
  const f=chunkFixed(Math.floor(x/CFG.chunk),Math.floor(y/CFG.chunk));if(f&&f.x===x&&f.y===y)return null;
- const ls=t==='h'&&biomeAt(x,y)==='grass'?['flint','stone','stone']:BIO[biomeAt(x,y)].node;return ls.length?ls[Math.floor(hsh(x,y,s+10)*ls.length)]:null}
+ const ls=t==='h'&&biomeAt(x,y)==='grass'?['flint','stone','stone']:bioL(biomeAt(x,y),'node');return ls.length?ls[Math.floor(hsh(x,y,s+10)*ls.length)]:null}
 // 地図：8×8マスの区画ごとに「発見済み」にする（G.world.seen["bx,by"]=1）
 function seenAt(x,y){return !!G.world.seen[(Math.floor(x)>>3)+','+(Math.floor(y)>>3)]}
 function reveal(){const fd=G.fd,se=G.world.seen,S=CFG.sight;let ch=false;
@@ -82,7 +82,7 @@ function fieldStart(sp){wld();if(!G.world.seen||Array.isArray(G.world.seen))G.wo
 function bagOf(pid){const fd=G.fd;if(!pid||pid===G.players[0].id)return fd.bag;if(!fd.pb)fd.pb={};return fd.pb[pid]||(fd.pb[pid]={})}
 function addBag(m,n,pid){const b=bagOf(pid);b[m]=(b[m]||0)+n}
 function fieldEnc(st){G.fd.enc=CFG.encBase;ev('enc');startCombat(st)}
-function rollEnc(x,y){const field=biomeAt(x,y),T=ENC[field],d=fdist(x,y),lv=dangerAt(x,y);
+function rollEnc(x,y){const field=biomeAt(x,y),T={mobs:bioL(field,'mobs'),elite:bioL(field,'elite')},d=fdist(x,y),lv=dangerAt(x,y);
  if(d>=CFG.eliteDist&&Math.random()<CFG.eliteRate)return {k:'e',en:[pick(T.elite)],field,lv};
  const n=1+(d>CFG.encFar[0]?1:0)+(d>CFG.encFar[1]&&Math.random()<.6?1:0),en=[];for(let i=0;i<n;i++)en.push(pick(T.mobs));return {k:'n',en,field,lv}}
 // 歩く（dx,dy は -1/0/1 の8方向）。画面を作り直す必要がある出来事（遭遇）が起きたら true

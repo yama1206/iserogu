@@ -87,14 +87,14 @@ function cardDesc(p,inst){const c=CARDS[inst.id],o=[],ci=cardRg(p,inst);if('eEr'
 function rollCards(p,n){const pool=[];Object.values(CARDS).forEach(c=>{if(!c.rw)return;if(!c.req)pool.push(c.id);else if(usable(p,{id:c.id})){pool.push(c.id);if(c.req!=='any')pool.push(c.id)}});const out=[];for(let tr=0;tr<80&&out.length<n;tr++){const id=pick(pool);if(!out.includes(id))out.push(id)}return out}
 /* ================= 戦闘 ================= */
 function startRun(sp){G.log=[];G.players.forEach(setChar);fieldStart(sp)}
-function spawn(id,kind,lv){const d=EN[id],n=Math.min(4,G.players.length),hm=(1+CFG.lvHp*(lv||0))*(kind==='b'?CFG.bossHp:1)*(kind==='b'?CFG.bossHpMul:kind==='e'?CFG.eliteHpMul:CFG.hpMul)[n-1],hp=Math.round(d.hp*hm),ps=Math.round(d.ps*hm);
- return {id,side:'e',n:d.n,em:d.em,hp,mhp:hp,ps,mps:ps,blk:0,st:{},mi:R(d.seq.length),it:null,x:0,y:0,f:3,broken:false,aggro:false,hitBy:[],boss:kind==='b',dm:(1+CFG.lvDmg*(lv||0))*(kind==='b'||kind==='e'?CFG.bossDmgMul:CFG.dmgMul)[n-1]*(kind==='b'?CFG.bossDmg:1)}}
+function spawn(id,kind,lv){const d=EN[id],n=Math.min(4,G.players.length),eg=Math.max(0,eraOf()-(d.era||0)),hm=(1+CFG.lvHp*(lv||0))*(1+CFG.eraHp*eg)*(kind==='b'?CFG.bossHp:1)*(kind==='b'?CFG.bossHpMul:kind==='e'?CFG.eliteHpMul:CFG.hpMul)[n-1],hp=Math.round(d.hp*hm),ps=Math.round(d.ps*hm);
+ return {id,side:'e',n:d.n,em:d.em,hp,mhp:hp,ps,mps:ps,blk:0,st:{},mi:R(d.seq.length),it:null,x:0,y:0,f:3,broken:false,aggro:false,hitBy:[],boss:kind==='b',dm:(1+CFG.lvDmg*(lv||0))*(1+CFG.eraDmg*eg)*(kind==='b'||kind==='e'?CFG.bossDmgMul:CFG.dmgMul)[n-1]*(kind==='b'?CFG.bossDmg:1)}}
 // st={k:n通常/e強敵/bボス, en:[敵ID], field:地域, fix:決まった場所の敵の番号}
 function startCombat(st){const n=Math.min(4,G.players.length),N=CFG.grid,map=genMap(st.field),en=[];
  G.phase='combat';G.cb={kind:st.k,field:st.field,fix:st.fix,lv:st.lv||0,map,en,turn:0,ph:'p',ei:0};
  const sp=[[0,3],[0,4],[0,2],[0,5]];   // 味方は左、敵は右に並ぶ
  G.players.forEach((p,i)=>{p.x=sp[i][0];p.y=sp[i][1];p.f=1;p.draw=shuf(p.deck.map(c=>Object.assign({},c)));p.hand=[];p.disc=[];p.exh=[];p.st={};p.blk=0;p.ps=p.mps;p.broken=false;p.out=false;p.downT=0;p.resc=null;p.done=false;if(p.hp<=0){p.hp=0;p.down=true}else p.down=false});
- const ids=st.en.slice();for(let i=1;i<n;i++)ids.push(pick((ENC[st.field]||ENC.grass).mobs));
+ const ids=st.en.slice();for(let i=1;i<n;i++)ids.push(pick(bioL(st.field,'mobs')));
  ids.forEach((id,i)=>{const e=spawn(id,i===0?st.k:'n',st.lv),c=[];for(let y=0;y<N;y++)for(let x=N-3;x<N;x++)if(!TER[map[y][x]].block&&!unitAt(x,y)&&(!e.boss||(x>=N-2&&y>=2&&y<=5)))c.push([x,y]);const s=pick(c);e.x=s[0];e.y=s[1];en.push(e)});
  G.cb.skip=skipEst();log(st.k==='b'?'ボス「'+en[0].n+'」が現れた！':st.k==='e'?'強敵が現れた！':'敵が現れた！');ev('start');startPlayerPhase()}
 function nearestP(e){const ps=alivePs();if(!ps.length)return null;const m=Math.min(...ps.map(p=>dist(e,p)));return pick(ps.filter(p=>dist(e,p)===m))}

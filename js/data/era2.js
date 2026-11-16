@@ -71,3 +71,33 @@ const PFAC={
  bench:{n:'作業台',em:'🛠️',d:'自分が製作する時、コモン以外が出やすくなる（Lvごとに工房Lv1つ分の半分）',cost:[{wood:8,stone:4,flint:2},{wood:12,bone:6,fang:2},{stone:12,copper:6}],need:[null,'t_knap','t_copper']}};
 // カードの永久強化の素材（n＝これまでに強化した数）
 function cupCost(n){const o={wood:4+n*2,stone:3+n*2};if(n>=3)o.hide=n-2;if(n>=6)o.copper=n-5;return o}
+// ---- v0.11.0 古代の敵と素材（古代になってから現れる） ----
+Object.assign(MAT,{wool:{n:'羊毛',em:'🧶'},jade:{n:'翡翠',em:'🟢'},relic:{n:'古代の遺物',em:'⚱️'}});
+E('bandit','野盗','🥷',30,18,'weak','flank',4,1,[['a','斬りつけ',7],['a','足払い',3,1,'weak',1]],[0,0,1],{era:1});
+E('archer','野盗の弓兵','🏹',22,12,'weak','shooter',3,4,[['a','矢',6],['a','二連射',3,2]],[0,0,1],{era:1});
+E('sheep','野生ヒツジ','🐑',26,16,'rand','charge',3,1,[['a','頭突き',7],['d','毛で守る',6]],[0,0,1],{era:1});
+E('goblin','ゴブリン','👺',24,12,'weak','flank',4,1,[['a','こん棒',6],['a','つまずかせ',2,2]],null,{era:1});
+E('mummy','ミイラ','🧟',36,22,'rand','guard',2,1,[['a','呪いの手',5,1,'weak',1],['d','包帯を巻く',8]],[0,0,1],{era:1});
+E('bwar','青銅の戦士','💂',95,52,'strong','guard',3,1,[['a','青銅の剣',13],['d','盾を構える',12],['A','なぎ払い',6]],null,{era:1});
+E('ent','怒れる古木','🌳',100,60,'rand','guard',2,2,[['A','枝の鞭',7],['a','根の締め付け',12,1,'weak',1],['d','樹皮',14]],null,{era:1,ar:2});
+E('sphinx','スフィンクス','🦁',190,100,'weak','flank',3,1,[['a','前足',15],['x','謎かけ','weak',1,1],['A','咆哮',8],['d','石の体',12,2]],null,{era:1,ar:2});
+E('giant','丘の巨人','🧌',200,105,'strong','charge',2,2,[['A','大こん棒',9],['a','踏みつぶし',18],['d','岩を盾に',12,2]],null,{era:1,ar:2});
+bioAdd(1,'grass forest desert snow swamp mount coast',{mobs:['bandit','archer']});
+bioAdd(1,'grass',{mobs:['sheep','sheep'],elite:['bwar'],boss:['giant']});
+bioAdd(1,'forest',{mobs:['goblin','goblin'],elite:['ent'],boss:['giant']});
+bioAdd(1,'desert',{mobs:['mummy','mummy'],elite:['bwar'],boss:['sphinx','sphinx']});
+bioAdd(1,'snow',{mobs:['sheep','goblin'],elite:['bwar'],boss:['giant']});
+bioAdd(1,'swamp',{mobs:['mummy','goblin'],elite:['ent'],node:['jade']});
+bioAdd(1,'mount',{mobs:['sheep','goblin'],elite:['bwar'],boss:['giant','sphinx'],node:['copper','copper','jade']});
+bioAdd(1,'volcano',{mobs:['goblin'],elite:['bwar'],node:['copper']});
+bioAdd(1,'coast',{mobs:['bandit'],elite:['bwar']});
+Object.assign(DROP,{bandit:['copper',1,.5],archer:['feather',1,.6],sheep:['wool',1,.9],goblin:['jade',1,.4],mummy:['relic',1,.3],bwar:['relic',2,1],ent:['wood',6,1],sphinx:['relic',4,1],giant:['relic',4,1]});
+// 古代の素材を使う装備
+W('jade_staff','翡翠の杖','🦯',1,3,'staff',1,3,'st_hit st_hit st_parry st_sweep g_herb g_band',{pas:{heal:2,atk:1}});
+Object.assign(ARM,{
+ wool_coat:{n:'羊毛の上着',em:'👘',sl:'b',hp:16,ps:10,red:1,mv:0,d:'あたたかい羊毛の上着。軽くて丈夫'},
+ wool_boots:{n:'羊毛のくつ',em:'🥾',sl:'f',hp:8,ps:8,red:0,mv:0,d:'羊毛を詰めたくつ。体勢をくずしにくい'},
+ relic_crown:{n:'遺物の冠',em:'👑',sl:'h',hp:16,ps:10,red:1,mv:0,d:'古代の遺物から作った冠。最大HPが高い'}});
+Object.assign(RECIPE,{wool_coat:{tech:'t_pottery',shop:2,cost:{wool:6,fiber:4}},wool_boots:{tech:'t_pottery',shop:2,cost:{wool:4,hide:2}},
+ relic_crown:{tech:'t_bronze',shop:3,forge:2,cost:{relic:2,jade:2,copper:2}},jade_staff:{tech:'t_writing',shop:3,cost:{wood:6,jade:4,herb:4}}});
+PFAC.bed.cost[2].wool=4;

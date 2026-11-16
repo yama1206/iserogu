@@ -4,7 +4,7 @@
 ERAS.push({n:'古典',sub:'鉄と帝国',ac:'#9fb4c8'});
 // ---- 新しい素材：鉄鉱石（山岳・火山の採集ポイント） ----
 MAT.iron={n:'鉄鉱石',em:'🔩'};
-BIO.mount.node.push('iron','iron');BIO.volcano.node.push('iron');
+// （v0.11.0：鉄鉱石の採集ポイントは古典になってから現れる。下の「古典の敵と素材」）
 // ---- 古典の研究 ----
 Object.assign(TECH,{
  t_iron:{era:2,n:'鉄器',f:'sci',lab:3,rp:34,cost:{iron:8,ember:2,wood:10},key:1,d:'炉をLv4にできる。鉄の剣・槍・斧・鎚矛、鉄の兜・すね当て・丸盾を製作できる（炉Lv4が必要）'},
@@ -13,13 +13,13 @@ Object.assign(TECH,{
  t_coin:{era:2,n:'貨幣',f:'ind',lab:3,rp:30,cost:{copper:8,iron:2,salt:4},key:1,d:'住民の木こり・採掘が1.25倍になる。施設（研究小屋・工房・住居・共有倉庫）をLv5にできる'},
  t_aqueduct:{era:2,n:'水道',f:'agr',lab:3,rp:30,cost:{stone:24,clay:10,iron:2},key:1,d:'畑の食料が1.3倍になる。畑をLv5にできる'},
  t_philo:{era:2,n:'哲学',f:'cul',lab:4,rp:36,cost:{reed:10,clay:8,pearl:1},key:1,d:'研究が1.25倍速くなる。医術の杖を製作できる'},
- t_surgery:{era:2,n:'医術',f:'med',lab:3,rp:28,cost:{herb:10,venom:4,salt:2},req:['t_philo'],d:'最大HP+8。戦闘に勝った時の回復が増える'},
+ t_surgery:{era:2,n:'医術',f:'med',lab:3,rp:28,cost:{herb:10,venom:4,salt:2,scroll:2},req:['t_philo'],d:'最大HP+8。戦闘に勝った時の回復が増える'},
  t_firearrow:{era:2,n:'火矢',f:'sci',lab:3,rp:26,cost:{sulfur:4,feather:4,wood:6},d:'火矢の弓を製作できる'},
  t_road:{era:2,n:'街道',f:'ind',lab:3,rp:26,cost:{stone:20,iron:2},d:'開拓地を4か所多く作れる。旅人のサンダルを製作できる'}});
 Object.assign(TECHFX,{t_surgery:{maxhp:8}});
 // ---- 施設：炉Lv4（鉄）・ほかの施設Lv5 ----
 FAC.forge.cost.push({stone:40,clay:16,iron:6});FAC.forge.work.push(30);FAC.forge.need.push('t_iron');
-FAC.lab.cost.push({stone:40,iron:6,reed:12});FAC.lab.work.push(34);FAC.lab.need.push('t_coin');
+FAC.lab.cost.push({stone:40,iron:6,reed:12,scroll:3});FAC.lab.work.push(34);FAC.lab.need.push('t_coin');
 FAC.shop.cost.push({stone:36,wood:28,iron:8});FAC.shop.work.push(34);FAC.shop.need.push('t_coin');
 FAC.house.cost.push({stone:32,clay:16,wood:24});FAC.house.work.push(30);FAC.house.need.push('t_coin');
 FAC.farm.cost.push({stone:20,clay:14,reed:12});FAC.farm.work.push(30);FAC.farm.need.push('t_aqueduct');
@@ -70,6 +70,34 @@ PFAC.train.cost.push({wood:26,stone:20,iron:4});PFAC.train.need.push('t_iron');
 PFAC.shed.cost.push({wood:30,stone:12,iron:2});PFAC.shed.need.push('t_iron');
 PFAC.bed.cost.push({hide:12,feather:8,salt:4});PFAC.bed.need.push('t_surgery');
 PFAC.garden.cost.push({stone:16,clay:10,iron:2});PFAC.garden.need.push('t_aqueduct');PFAC.garden.out.push({berry:5,herb:4,fiber:4,wood:3,clay:2});
-PFAC.bench.cost.push({stone:16,iron:6,wood:10});PFAC.bench.need.push('t_steel');
+PFAC.bench.cost.push({stone:16,iron:6,wood:10,gold:2});PFAC.bench.need.push('t_steel');
 // 開拓地の上限（街道で+4）
 function outMaxN(){return CFG.outMax+(hasTech('t_road')?4:0)}
+// ---- v0.11.0 古典の敵と素材（古典になってから現れる） ----
+Object.assign(MAT,{gold:{n:'金鉱石',em:'🪙'},scroll:{n:'古文書',em:'📜'},mana:{n:'魔晶石',em:'🔮'}});
+E('glad','剣闘士','🤺',40,24,'weak','flank',4,1,[['a','突き',9],['a','連撃',4,2],['d','受け流し',7]],null,{era:2});
+E('cav','騎馬兵','🏇',44,26,'weak','charge',5,1,[['a','突撃',12],['a','槍',7]],[0,1,1],{era:2});
+E('orc','オーク','👹',52,30,'strong','charge',3,1,[['a','大斧',13],['u','雄たけび',2]],[0,0,1],{era:2});
+E('centaur','ケンタウロス','🐎',38,20,'weak','shooter',4,4,[['a','矢',8],['a','三連射',3,3]],null,{era:2});
+E('wraith','亡霊','👻',30,14,'weak','flank',4,1,[['a','冷たい手',6,1,'weak',1],['x','呪い','vuln',1]],[0,0,1],{era:2});
+E('minot','ミノタウロス','🐂',130,70,'strong','charge',3,1,[['a','大斧',18],['A','突進なぎ',8],['d','怒り',12,3]],null,{era:2});
+E('cyclops','キュクロプス','👁️',140,75,'rand','charge',2,2,[['a','岩投げ',16],['A','地ならし',8],['d','身構える',12,2]],null,{era:2,ar:2});
+E('chimera','キマイラ','🐲',240,120,'rand','flank',3,2,[['A','炎の息',10],['a','三つの牙',7,3],['a','毒の尾',8,1,'bleed',5],['d','咆哮',12,3]],null,{era:2,ar:2});
+E('kraken','クラーケン','🦑',240,120,'weak','guard',2,3,[['A','触手の嵐',9],['a','引きずり込む',18],['x','墨','weak',2,1],['d','深みへ',14,2]],null,{era:2,ar:2});
+bioAdd(2,'grass forest desert snow mount coast',{mobs:['glad']});
+bioAdd(2,'grass',{mobs:['cav','cav','centaur'],elite:['minot'],boss:['chimera']});
+bioAdd(2,'forest',{mobs:['orc','wraith'],elite:['minot','cyclops'],boss:['chimera']});
+bioAdd(2,'desert',{mobs:['centaur','cav'],elite:['minot'],boss:['chimera'],node:['gold']});
+bioAdd(2,'snow',{mobs:['wraith','orc'],elite:['cyclops']});
+bioAdd(2,'swamp',{mobs:['wraith','wraith','orc'],elite:['cyclops'],boss:['chimera']});
+bioAdd(2,'mount',{mobs:['orc','cav'],elite:['cyclops','minot'],boss:['chimera'],node:['iron','iron','gold']});
+bioAdd(2,'volcano',{mobs:['orc','orc'],elite:['cyclops'],node:['iron','gold']});
+bioAdd(2,'coast',{mobs:['centaur'],elite:['minot'],boss:['kraken','kraken']});
+bioAdd(2,'sea',{boss:['kraken','kraken']});
+Object.assign(DROP,{glad:['scroll',1,.4],cav:['hide',2,.7],orc:['iron',1,.6],centaur:['feather',2,.7],wraith:['scroll',1,.5],minot:['mana',2,1],cyclops:['mana',2,1],chimera:['mana',4,1],kraken:['pearl',4,1]});
+// 古典の素材を使う装備
+W('cent_sword','百人隊長の剣','🗡️',2,4,'sword',1,6,'sw_slash sw_thrust sw_parry sw_combo sw_cross sw_counter',{pas:{atk:1}});
+W('mana_staff','魔晶石の杖','🔮',2,4,'staff',1,4,'st_hit st_hit st_parry st_sweep g_herb g_band',{pas:{heal:4,atk:1}});
+ARM.cent_helm={n:'百人隊長の兜',em:'🪖',sl:'h',hp:18,ps:14,red:2,mv:0,d:'金で飾った隊長の兜。とても丈夫'};
+Object.assign(RECIPE,{cent_sword:{tech:'t_steel',shop:5,forge:4,cost:{iron:10,gold:3,scroll:1}},mana_staff:{tech:'t_philo',shop:5,cost:{wood:8,mana:3,gold:2}},
+ cent_helm:{tech:'t_steel',shop:4,forge:4,cost:{iron:6,gold:3}}});

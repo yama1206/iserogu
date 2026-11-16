@@ -16,10 +16,13 @@ const BIO={
  desert:{n:'砂漠',bg:'#d8b46a',node:['cactus','stone','flint','salt'],mobs:['scorp','scorp','vulture','lizard'],elite:['worm'],boss:['kscorp']},
  snow:{n:'雪原',bg:'#dfe8ef',node:['ice','stone','wood'],mobs:['swolf','swolf','hare','fox'],elite:['rhino'],boss:['pbear']},
  swamp:{n:'沼地',bg:'#5c6e44',node:['clay','reed','herb','reed'],mobs:['croc','frog','frog','leech'],elite:['bcroc'],boss:['hydra']},
- mount:{n:'山岳',bg:'#8b8478',node:['stone','flint','copper','stone'],mobs:['goat','goat','eagle','lynx'],elite:['roc'],boss:['yeti']},
+ mount:{n:'山岳',bg:'#8b8478',node:['stone','flint','stone'],mobs:['goat','goat','eagle','lynx'],elite:['roc'],boss:['yeti']},
  volcano:{n:'火山',bg:'#5a4440',node:['obsidian','sulfur','stone'],mobs:['salam','salam','spark','mlizard'],elite:['golem'],boss:['drake']},
  coast:{n:'海岸',bg:'#e6d49a',node:['shell','salt','fiber','shell'],mobs:['crab','crab','gull','turtle'],elite:['octo'],boss:['octo']},
  sea:{n:'海',bg:'#58a8e0',node:[],mobs:['crab'],elite:['octo'],boss:['octo']}};
+// v0.11.0：時代が進むと増える物（敵・採集ポイント）。BIO[b].ex[時代]={node,mobs,elite,boss}。今の時代までの分を足して使う
+function bioAdd(era,bs,o){bs.split(' ').forEach(b=>{const B=BIO[b];B.ex=B.ex||[];const x=B.ex[era]=B.ex[era]||{};for(const k in o)x[k]=(x[k]||[]).concat(o[k])})}
+function bioL(b,k){const B=BIO[b]||BIO.grass,e=typeof eraOf==='function'?eraOf():0;let ls=B[k]||[];for(let i=1;i<=e;i++){const x=B.ex&&B.ex[i];if(x&&x[k])ls=ls.concat(x[k])}return ls}
 // ランダムエンカウントの表（バイオームから作る）
 const ENC={};for(const k in BIO)ENC[k]={mobs:BIO[k].mobs,elite:BIO[k].elite};
 // 戦利品：[素材, 数, 落とす確率]（危険度3ごとに数が1増える）

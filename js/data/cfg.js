@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.10.0';
+const VERSION='0.11.0';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -35,6 +35,7 @@ const CFG={
  encGrace:5,       // 出発直後・戦闘直後に敵が出ない歩数
  safeR:4,          // 拠点のまわりで敵が出ない範囲（マス）
  encFar:[9,18],    // 拠点からこの距離を超えると敵が1体ずつ増える
+ eraHp:.2,eraDmg:.12, // v0.11.0：前の時代の敵は、時代が1つ進むごとにHP+20%・ダメージ+12%
  eliteDist:14,eliteRate:.07, // 遠くでは通常の遭遇がまれに強敵になる
  nodeRate:.045,gatherN:[1,3],// 採集ポイントの多さ／1回で採れる数
  loseBag:.3,
