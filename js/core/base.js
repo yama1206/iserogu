@@ -45,6 +45,7 @@ function shareOp(a){const w=ensureWorld(),b=w.base,sh=w.share;
   case 'give':{const n=a.n|0;if(!MAT[a.m]||n<=0||n>99999)return '';sh[a.m]=(sh[a.m]||0)+n;return ''}
   case 'build':{const f=FAC[a.id];if(!f)return '';const lv=facLv(a.id);if(lv>=f.cost.length)return 'これ以上は上げられません';if(b.bld)return '建築中の施設があります（建築は1つずつ）';if(f.need[lv]&&!hasTech(f.need[lv]))return '研究「'+TECH[f.need[lv]].n+'」が必要です';if(!canPay(sh,f.cost[lv]))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,f.cost[lv]);b.bld={id:a.id,w:0};return ''}
   case 'research':{const t=TECH[a.id];if(!t||hasTech(a.id))return '';if(b.res)return '研究中の技術があります（研究は1つずつ）';if(facLv('lab')<t.lab)return '研究小屋Lv'+t.lab+'が必要です';if((t.req||[]).some(r=>!hasTech(r)))return '先に「'+(t.req||[]).filter(r=>!hasTech(r)).map(r=>TECH[r].n).join('・')+'」の研究が必要です';if(!canPay(sh,t.cost))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,t.cost);b.res={id:a.id,rp:0};return ''}
+  case 'outpost':{const x=a.x|0,y=a.y|0;if(!b.out)b.out=[];if(b.out.length>=CFG.outMax||b.out.some(o=>fdist(x-o.x,y-o.y)<CFG.outMin)||fdist(x,y)<CFG.outMin)return '';b.out.push({x,y});return ''}
   case 'job':{if(!JOBS[a.j])return '';b.job[a.j]=Math.max(0,Math.min(3,a.v|0));return ''}
  }
  return ''}

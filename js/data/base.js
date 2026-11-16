@@ -14,6 +14,7 @@ const TECH={
  t_fire:{n:'火の利用',f:'sci',lab:1,rp:8,cost:{wood:5,flint:2},key:1,d:'戦闘に勝った時の回復量が増える'},
  t_farm:{n:'採集と栽培',f:'agr',lab:1,rp:8,cost:{berry:4,fiber:4},key:1,d:'畑を建てられる'},
  t_build:{n:'木組みの建築',f:'ind',lab:1,rp:10,cost:{wood:8,fiber:4},d:'施設をLv2にできる'},
+ t_camp:{n:'野営の知識',f:'ind',lab:1,rp:8,cost:{wood:6,fiber:4},d:'フィールドに開拓地を作れる（出発地点・休憩所・ファストトラベル）'},
  t_herb:{n:'薬草の知識',f:'med',lab:1,rp:8,cost:{herb:4},d:'最大HP+6'},
  t_knap:{n:'黒曜石の加工',f:'ind',lab:1,rp:10,cost:{stone:6,flint:3},req:['t_stone'],d:'黒曜石のナイフ・石斧を製作できる'},
  t_hide:{n:'皮なめし',f:'ind',lab:2,rp:12,cost:{hide:3,fiber:4},d:'戦闘開始時にブロック+3'},

@@ -18,7 +18,7 @@ function tGo(){const p=me(),ch=CH[p.ch],w=EQ[p.w],pl=plOf(p.id),g=gearOf(p);
  return `${matesH()}${partyH()}<div class="row">${G.players.length<2?btn('addp','＋ 仲間を連れていく（2人を1人で操作）',{c:'sm'}):btn('rmp','－ 仲間を外す',{c:'sm'})}</div>
  <div class="box col"><div class="hd">キャラクター${G.players.length>1?'（'+esc(p.name)+'）':''}</div><div class="chs">${CHARS.map(c=>`<button class="btn f chb ${p.ch===c.id?'on':''}" data-a="char" data-i="${c.id}"><div class="pe">${c.em}</div>${c.n}<div class="small">HP${c.hp}・体勢${c.ps}</div></button>`).join('')}</div><div class="small" style="text-align:center">${ch.d}<br>初期カード：${countNames(ch.extra)}</div></div>
  <div class="box col"><div class="hd">装備する武器</div><div class="chs">${pl.gear.map(x=>`<button class="btn f chb ${p.g===x.u?'on':''} ${gearUsed(p,x.u)?'dim':''}" data-a="equip" data-i="${x.u}"><div class="pe">${EQ[x.id].em}</div>${EQ[x.id].n}<div class="small" style="color:${RAR[x.r].c}">${RAR[x.r].n}</div></button>`).join('')}</div><div class="small" style="text-align:center">${g?gearFxH(g)+'<br>':''}${wInfo(w)}</div></div>
- <div class="row">${btn('start','冒険へ出発',{c:'pri',y:1})}</div>`}
+ ${outs().length?`<div class="box col"><div class="hd">出発する場所</div><div class="row">${btn('start','🛖 拠点から出発',{c:'pri',i:-1,y:1})}</div>${outs().map((_,i)=>`<div class="row">${btn('start',outName(i)+'から',{i})}</div>`).join('')}</div>`:`<div class="row">${btn('start','冒険へ出発',{c:'pri',y:1})}</div>`}`}
 /* ---------- 倉庫 ---------- */
 function tStore(){const pl=plOf(MY),sh=G.world.share,ks=Object.keys(MAT).filter(m=>(pl.store[m]||0)>0),b=G.world.base;
  return `<div class="box col"><div class="hd">個人倉庫</div><div class="small">冒険で持ち帰った素材。武器の製作に使います。</div>

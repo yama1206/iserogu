@@ -23,6 +23,7 @@ const FV={jt:0,v:View.create(),keys:{},joy:null,tile:40,top:0,last:0,trail:[],im
    if(f.steps!==this.st){this.st=f.steps;if(f.steps%2===0)sfx('step')}}
   if(performance.now()-this.jt>250){this.jt=performance.now();const b=document.querySelector('[data-a="fJoin"]');if(b){const m=joinTarget(),tx=m?(m.s.w==='c'?'⚔️ '+m.name+'に加勢':'🤝 '+m.name+'と合流'):'🤝 合流';b.classList.toggle('dis',!m);if(b.textContent!==tx)b.textContent=tx}}
   const n=fieldNear(),nk=n?n.key:null;if(nk!==this.near){this.near=nk;const b=document.querySelector('[data-a="fAct"]');if(b){b.classList.toggle('dis',!n);b.textContent=n?'✋ '+MAT[n.m].n+'を採集':'✋ 採集'}}
+  {const b=document.querySelector('[data-a="ovCamp"]');if(b){const t=campLbl();if(b.textContent!==t)b.textContent=t}}
   const r=regLabel();if(r!==this.reg){this.reg=r;const e=document.getElementById('reg');if(e)e.textContent=r}},
  draw(){const v=this.v;if(!v.ctx||!document.getElementById('fv')||!G||G.phase!=='field'||!G.fd)return;const fd=G.fd,W=wld(),c=v.cam,k=v.ctx,now=performance.now(),FAR=26;
   View.look(v,fd.x,fd.y+4);View.begin(v);
@@ -34,6 +35,7 @@ const FV={jt:0,v:View.create(),keys:{},joy:null,tile:40,top:0,last:0,trail:[],im
     if(t==='t'){const em=TREE[biomeAt(x,y)];if(em)View.add(v,{x:x+.35+r*.3,y:y+.55,w:1,h:1+r*.3,art:'emo',o:{em},tall:true});else View.add(v,{x:x+.35+r*.3,y:y+.5,w:1,h:1.25+r*.5,art:'tree',tall:true})}else if(t==='r')View.add(v,{x:x+.5,y:y+.6,w:.95,h:.6+r*.35,art:'rock',tall:true});
     const m=fd.taken[x+','+y]?null:nodeAt(x,y);if(m)View.add(v,{x:x+.5,y:y+.55,z:.05+Math.sin(now/300+x)*.04,w:.55,h:.55,art:'emo',o:{em:MAT[m].em}})}}
   View.add(v,{x:.5,y:.45,w:1.9,h:1.8,art:'emo',o:{em:'🛖'},tall:true});
+  outs().forEach((o,i)=>{if(Math.abs(o.x-c.x)>30||o.y<c.near-FAR-2||o.y>c.near+3)return;View.add(v,{x:o.x+.5,y:o.y+.45,w:1.5,h:1.4,art:'emo',o:{em:'⛺'},tall:true,after:(k,X,Y,S)=>{k.font='bold '+Math.max(10,S*.28)+'px sans-serif';k.textAlign='center';k.lineWidth=3;k.strokeStyle='#000';const t='開拓地'+(i+1),yy=Y-1.5*S;k.strokeText(t,X,yy);k.fillStyle='#ffd27a';k.fillText(t,X,yy)}})});
   fixedNear(c.x,c.near-FAR/2,FAR).forEach(f=>{if(fd.dead[f.key])return;const b=f.k==='b';View.add(v,{x:f.x+.5,y:f.y+.6,w:b?1.2:.9,h:b?1.7:1.2,art:'unit',o:{em:EN[f.en[0]].em,ring:'#d0452c'},
    after:(k,X,Y,S)=>{k.font='bold '+Math.max(10,S*.3)+'px sans-serif';k.textAlign='center';k.lineWidth=3;k.strokeStyle='#000';const s=b?'👑ボス':'⚠️強敵',y=Y-(b?1.78:1.28)*S;k.strokeText(s,X,y);k.fillStyle='#ff8a70';k.fillText(s,X,y)}})});
   G.players.forEach((p,i)=>{if(p.out)return;let px=fd.x,py=fd.y;if(i){const t=this.trail[this.trail.length-1-i*5];if(t){px=t[0];py=t[1]}else{px=fd.x-.45*i;py=fd.y}}
@@ -51,7 +53,7 @@ const FV={jt:0,v:View.create(),keys:{},joy:null,tile:40,top:0,last:0,trail:[],im
    for(let y=by*8;y<by*8+8;y++)for(let x=bx*8;x<bx*8+8;x++){const c=FMC[ftile(x,y)];k.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;k.fillRect(ox+x*sc,oy+y*sc,sc+.6,sc+.6)}}},
  marks(k,ox,oy,sc,full,x0,y0,x1,y1){const fd=G.fd,dot=(x,y,r,c)=>{k.fillStyle=c;k.beginPath();k.arc(ox+x*sc,oy+y*sc,r,0,7);k.fill();k.strokeStyle='#000';k.lineWidth=1;k.stroke()},rr=full?5:4;
   if(full&&sc>=3)for(let y=Math.floor(y0);y<=y1;y++)for(let x=Math.floor(x0);x<=x1;x++){if(!seenAt(x,y)||fd.taken[x+','+y])continue;if(nodeAt(x,y)){k.fillStyle='#fff';k.fillRect(ox+(x+.5)*sc-1,oy+(y+.5)*sc-1,2,2)}}
-  dot(.5,.5,rr,'#fff');fixedNear((x0+x1)/2,(y0+y1)/2,Math.max(x1-x0,y1-y0)/2).forEach(f=>{if(!fd.dead[f.key]&&seenAt(f.x,f.y))dot(f.x+.5,f.y+.5,rr,f.k==='b'?'#c040ff':'#ff4030')});
+  dot(.5,.5,rr,'#fff');outs().forEach(o=>dot(o.x+.5,o.y+.5,rr,'#ff9a30'));fixedNear((x0+x1)/2,(y0+y1)/2,Math.max(x1-x0,y1-y0)/2).forEach(f=>{if(!fd.dead[f.key]&&seenAt(f.x,f.y))dot(f.x+.5,f.y+.5,rr,f.k==='b'?'#c040ff':'#ff4030')});
   mates().forEach(m=>{const o=this.mp[m.pid]||m.s;if(m.s&&m.s.w!=='b'&&o&&o.x!=null&&!byId(m.pid))dot(o.x,o.y,rr,'#40a0ff')});dot(fd.x,fd.y,rr,'#ffe060')},
  mini(k,x,y,m){const R=12,sc=m/(R*2),fd=G.fd,ox=x-(fd.x-R)*sc,oy=y-(fd.y-R)*sc;k.save();k.beginPath();k.rect(x,y,m,m);k.clip();k.fillStyle='#1a1612';k.fillRect(x,y,m,m);k.globalAlpha=.9;
   this.paint(k,ox,oy,sc,fd.x-R,fd.y-R,fd.x+R,fd.y+R);k.globalAlpha=1;this.marks(k,ox,oy,sc,false,fd.x-R,fd.y-R,fd.x+R,fd.y+R);k.restore();k.strokeStyle='#ffd870';k.lineWidth=2;k.strokeRect(x,y,m,m)},

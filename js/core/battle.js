@@ -83,7 +83,7 @@ function cardDesc(p,inst){const c=CARDS[inst.id],o=[],ci=cardRg(p,inst);if('eEr'
  if(c.x)o.push('【消耗】');return o.join('。')}
 function rollCards(p,n){const pool=[];Object.values(CARDS).forEach(c=>{if(!c.rw)return;if(!c.req)pool.push(c.id);else if(usable(p,{id:c.id})){pool.push(c.id);if(c.req!=='any')pool.push(c.id)}});const out=[];for(let tr=0;tr<80&&out.length<n;tr++){const id=pick(pool);if(!out.includes(id))out.push(id)}return out}
 /* ================= 戦闘 ================= */
-function startRun(){G.log=[];G.players.forEach(setChar);fieldStart()}
+function startRun(sp){G.log=[];G.players.forEach(setChar);fieldStart(sp)}
 function spawn(id,kind,lv){const d=EN[id],n=Math.min(4,G.players.length),hm=(1+CFG.lvHp*(lv||0))*(kind==='b'?CFG.bossHp:1)*(kind==='b'?CFG.bossHpMul:kind==='e'?CFG.eliteHpMul:CFG.hpMul)[n-1],hp=Math.round(d.hp*hm),ps=Math.round(d.ps*hm);
  return {id,side:'e',n:d.n,em:d.em,hp,mhp:hp,ps,mps:ps,blk:0,st:{},mi:R(d.seq.length),it:null,x:0,y:0,f:3,broken:false,aggro:false,hitBy:[],boss:kind==='b',dm:(1+CFG.lvDmg*(lv||0))*(kind==='b'||kind==='e'?CFG.bossDmgMul:CFG.dmgMul)[n-1]*(kind==='b'?CFG.bossDmg:1)}}
 // st={k:n通常/e強敵/bボス, en:[敵ID], field:地域, fix:決まった場所の敵の番号}
@@ -207,7 +207,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
  switch(a.t){
   case 'char':if(G.phase==='prep'&&CH[a.c]){p.ch=a.c;setChar(p)}break;
   case 'equip':case 'donate':case 'build':case 'research':case 'craft':case 'scrap':case 'job':er=baseAct(p,a);break;
-  case 'start':if(G.phase!=='prep')return '';startRun();break;
+  case 'start':if(G.phase!=='prep')return '';startRun(typeof a.sp==='number'&&outs()[a.sp]?a.sp:-1);break;
   case 'move':er=moveP(p,a.x,a.y);break;
   case 'face':er=canAct(p);if(!er&&a.f>=0&&a.f<4)p.f=a.f;break;
   case 'play':er=playCard(p,a.u,a.tg);break;
@@ -217,6 +217,9 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
   case 'pick':{const r=p.rw[0];if(!r||G.phase!=='reward')return '';if(a.i!=null&&a.i>=0){const id=r.o[a.i];if(!id)return '';if(r.k==='card')p.deck.push(cinst(id));else{setWeapon(p,id);log(p.name+'は「'+EQ[id].n+'」を手に入れた。')}}p.rw.shift();if(!p.rw.length)p.done=true;break}
   case 'gather':if(G.phase!=='field')return '';er=fieldGather(p.id);break;
   case 'return':er=fieldReturn();break;
+  case 'outpost':er=fieldOutpost(p.id);break;
+  case 'rest':er=fieldRest();break;
+  case 'warp':er=fieldWarp(a.i|0);break;
   case 'restart':if(!['over','home'].includes(G.phase))return '';G.phase='prep';G.cb=null;G.fd=null;G.players.forEach(setChar);break;
   default:return ''}
  if(er)return er;progress();HOOK.changed();return ''}

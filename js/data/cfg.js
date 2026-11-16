@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.6.0';
+const VERSION='0.7.0';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -37,7 +37,14 @@ const CFG={
  encFar:[9,18],    // 拠点からこの距離を超えると敵が1体ずつ増える
  eliteDist:14,eliteRate:.07, // 遠くでは通常の遭遇がまれに強敵になる
  nodeRate:.045,gatherN:[1,3],// 採集ポイントの多さ／1回で採れる数
- loseBag:.3,       // 強制帰還で失う荷物の割合
+ loseBag:.3,
+ // ---- 開拓地（v0.7.0） ----
+ outCost:{wood:12,stone:8,fiber:6}, // 開拓地を作る素材（荷物→個人倉庫の順に使う）
+ outMin:24,        // 拠点・ほかの開拓地からこれだけ離れていないと作れない（マス）
+ outMax:12,        // 開拓地の数の上限
+ outSafe:3,        // 開拓地のまわりで敵が出ない範囲（マス）
+ outNearR:1.8,     // 開拓地の「近く」（休む・移動ができる距離）
+       // 強制帰還で失う荷物の割合
  // ---- 拠点（v0.3.2） ----
  minPerSec:1,      // 現実1秒で進むゲーム内の分（1時間＝現実60秒）。世界を開いている間だけ進む
  popStart:3,       // 最初の住民の数
