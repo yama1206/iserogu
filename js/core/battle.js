@@ -87,8 +87,8 @@ function cardDesc(p,inst){const c=CARDS[inst.id],o=[],ci=cardRg(p,inst);if('eEr'
 function rollCards(p,n){const pool=[];Object.values(CARDS).forEach(c=>{if(!c.rw)return;if(!c.req)pool.push(c.id);else if(usable(p,{id:c.id})){pool.push(c.id);if(c.req!=='any')pool.push(c.id)}});const out=[];for(let tr=0;tr<80&&out.length<n;tr++){const id=pick(pool);if(!out.includes(id))out.push(id)}return out}
 /* ================= 戦闘 ================= */
 function startRun(sp){G.log=[];G.players.forEach(setChar);fieldStart(sp)}
-function spawn(id,kind,lv){const d=EN[id],n=Math.min(4,G.players.length),eg=Math.max(0,eraOf()-(d.era||0)),hm=(1+CFG.lvHp*(lv||0))*(1+CFG.eraHp*eg)*(kind==='b'?CFG.bossHp:1)*(kind==='b'?CFG.bossHpMul:kind==='e'?CFG.eliteHpMul:CFG.hpMul)[n-1],hp=Math.round(d.hp*hm),ps=Math.round(d.ps*hm);
- return {id,side:'e',n:d.n,em:d.em,hp,mhp:hp,ps,mps:ps,blk:0,st:{},mi:R(d.seq.length),it:null,x:0,y:0,f:3,broken:false,aggro:false,hitBy:[],boss:kind==='b',dm:(1+CFG.lvDmg*(lv||0))*(1+CFG.eraDmg*eg)*(kind==='b'||kind==='e'?CFG.bossDmgMul:CFG.dmgMul)[n-1]*(kind==='b'?CFG.bossDmg:1)}}
+function spawn(id,kind,lv){const d=EN[id],n=Math.min(4,G.players.length),eg=Math.max(0,eraOf()-(d.era||0)),hm=CFG.enHp*(1+CFG.lvHp*(lv||0))*(1+CFG.eraHp*eg)*(kind==='b'?CFG.bossHp:1)*(kind==='b'?CFG.bossHpMul:kind==='e'?CFG.eliteHpMul:CFG.hpMul)[n-1],hp=Math.round(d.hp*hm),ps=Math.round(d.ps*hm);
+ return {id,side:'e',n:d.n,em:d.em,hp,mhp:hp,ps,mps:ps,blk:0,st:{},mi:R(d.seq.length),it:null,x:0,y:0,f:3,broken:false,aggro:false,hitBy:[],boss:kind==='b',dm:CFG.enDmg*(1+CFG.lvDmg*(lv||0))*(1+CFG.eraDmg*eg)*(kind==='b'||kind==='e'?CFG.bossDmgMul:CFG.dmgMul)[n-1]*(kind==='b'?CFG.bossDmg:1)}}
 // st={k:n通常/e強敵/bボス, en:[敵ID], field:地域, fix:決まった場所の敵の番号}
 function startCombat(st){const n=Math.min(4,G.players.length),N=CFG.grid,map=genMap(st.field),en=[];
  G.phase='combat';G.cb={kind:st.k,field:st.field,fix:st.fix,lv:st.lv||0,map,en,turn:0,ph:'p',ei:0};

@@ -22,7 +22,8 @@ const BIO={
  sea:{n:'海',bg:'#58a8e0',node:[],mobs:['crab'],elite:['octo'],boss:['octo']}};
 // v0.11.0：時代が進むと増える物（敵・採集ポイント）。BIO[b].ex[時代]={node,mobs,elite,boss}。今の時代までの分を足して使う
 function bioAdd(era,bs,o){bs.split(' ').forEach(b=>{const B=BIO[b];B.ex=B.ex||[];const x=B.ex[era]=B.ex[era]||{};for(const k in o)x[k]=(x[k]||[]).concat(o[k])})}
-function bioL(b,k){const B=BIO[b]||BIO.grass,e=typeof eraOf==='function'?eraOf():0;let ls=B[k]||[];for(let i=1;i<=e;i++){const x=B.ex&&B.ex[i];if(x&&x[k])ls=ls.concat(x[k])}return ls}
+function bioL(b,k){const B=BIO[b]||BIO.grass,e=typeof eraOf==='function'?eraOf():0,all=k==='node',lo=all?0:Math.max(0,e-1);   // 敵は今の時代と1つ前の時代だけ／素材はすべて
+ const f=from=>{let ls=from===0?(B[k]||[]):[];for(let i=Math.max(1,from);i<=e;i++){const x=B.ex&&B.ex[i];if(x&&x[k])ls=ls.concat(x[k])}return ls};const ls=f(lo);return ls.length?ls:f(0)}
 // ランダムエンカウントの表（バイオームから作る）
 const ENC={};for(const k in BIO)ENC[k]={mobs:BIO[k].mobs,elite:BIO[k].elite};
 // 戦利品：[素材, 数, 落とす確率]（危険度3ごとに数が1増える）
