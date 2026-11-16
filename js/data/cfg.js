@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.3.1';
+const VERSION='0.3.2';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -32,7 +32,7 @@ const CFG={
  eliteDist:14,eliteRate:.07, // 遠くでは通常の遭遇がまれに強敵になる
  nodeRate:.045,gatherN:[1,3],// 採集ポイントの多さ／1回で採れる数
  loseBag:.3,       // 強制帰還で失う荷物の割合
- // ---- 拠点（v0.3.1） ----
+ // ---- 拠点（v0.3.2） ----
  minPerSec:1,      // 現実1秒で進むゲーム内の分（1時間＝現実60秒）。世界を開いている間だけ進む
  popStart:3,       // 最初の住民の数
  jobPrio:{farm:2,lumber:1,mine:1,research:2,build:2}, // 仕事の優先度の初期値（0なし 1低 2中 3高）
