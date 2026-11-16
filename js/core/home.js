@@ -2,7 +2,8 @@
 /* イセログ core：個人施設とカードの永久強化（v0.9.0）。個人分（G.world.pl[自分]）に入るので、オンラインでは自分の端末が持つ
    pl.fac＝個人施設のLv、pl.cup＝永久に強化したカード（カードの種類ごと）、pl.gd＝家庭菜園を最後に収穫した日 */
 function pfLv(pl,id){return (pl&&pl.fac&&pl.fac[id])||0}
-function gearMaxOf(pl){return CFG.gearMax+pfLv(pl,'shed')*10}
+function gearMaxOf(pl){return CFG.gearMax}
+function shedMax(pl){return pfLv(pl,'shed')*10}
 function cupMax(pl){return pfLv(pl,'train')*4}
 function cupN(pl){return Object.keys(pl.cup||{}).length}
 function dayOf(){return Math.floor(G.world.base.t/1440)}
@@ -22,5 +23,7 @@ function homeAct(p,pl,a){if(!pl.fac)pl.fac={};
    pay(pl.store,f.cost[lv]);pl.fac[a.id]=lv+1;if(a.id==='garden')pl.gd=dayOf();setChar(p);ev('pbuilt',{id:a.id,lv:lv+1});return ''}
   case 'pup':{if(!CARDS[a.id]||!baseCards(p).includes(a.id))return '';if(!pl.cup)pl.cup={};if(pl.cup[a.id])return 'もう強化しています';if(!pfLv(pl,'train'))return '鍛錬場が必要です';if(cupN(pl)>=cupMax(pl))return '鍛錬場のLvを上げると、もっと強化できます';
    const c=cupCost(cupN(pl));if(!canPay(pl.store,c))return '個人倉庫の素材が足りません';pay(pl.store,c);pl.cup[a.id]=1;setChar(p);ev('pup',{id:a.id});return ''}
+  case 'stow':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearInUse(p,g.u))return '装備中の物はしまえません';if(!pl.shed)pl.shed=[];if(pl.shed.length>=shedMax(pl))return '物置がいっぱいです（Lvを上げると増えます）';pl.gear=pl.gear.filter(x=>x!==g);pl.shed.push(g);return ''}
+  case 'unstow':{const g=(pl.shed||[]).find(x=>x.u===a.g);if(!g)return '';if(pl.gear.length>=gearMaxOf(pl))return '持っている装備がいっぱいです';pl.shed=pl.shed.filter(x=>x!==g);pl.gear.push(g);return ''}
   case 'harvest':{const o=harvestOut(pl);if(!Object.keys(o).length)return 'まだ収穫できる物がありません（1日ごとに実ります）';for(const m in o)pl.store[m]=(pl.store[m]||0)+o[m];pl.gd=dayOf();ev('harvest',{o});return ''}}
  return ''}

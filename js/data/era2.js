@@ -64,7 +64,7 @@ Object.assign(RECIPE,{
 // ---- 個人施設（v0.9.0）：自分だけの施設。個人倉庫の素材で、すぐに建つ。cost[Lv-1]、need[Lv-1]＝必要な研究 ----
 const PFAC={
  train:{n:'鍛錬場',em:'🥋',d:'カードを永久に強化できる（Lvごとに4種類まで）。強化したカードは冒険の最初から強化済み',cost:[{wood:8,stone:6},{wood:14,stone:10,hide:3},{wood:20,stone:16,copper:4}],need:[null,'t_build','t_copper']},
- shed:{n:'物置',em:'🗄️',d:'持てる装備の数が増える（Lvごとに+10）',cost:[{wood:10},{wood:16,stone:8},{wood:24,clay:8}],need:[null,'t_build','t_pottery']},
+ shed:{n:'物置',em:'🗄️',d:'装備していない装備をしまっておける（Lvごとに10個）。しまった装備は取り出すまで使えない',cost:[{wood:10},{wood:16,stone:8},{wood:24,clay:8}],need:[null,'t_build','t_pottery']},
  bed:{n:'寝床',em:'🛏️',d:'よく眠れて体が丈夫になる（最大HP Lv×4）',cost:[{fiber:8,hide:2},{hide:5,feather:4},{hide:8,feather:6,pearl:1}],need:[null,'t_hide','t_writing']},
  garden:{n:'家庭菜園',em:'🪴',d:'毎日、素材がとれる（「収穫」で個人倉庫へ。7日分までたまる）',cost:[{wood:6,fiber:6},{wood:10,clay:6},{stone:12,clay:8,reed:6}],need:['t_farm','t_build','t_irrig'],
   out:[{berry:2,herb:1},{berry:3,herb:2,fiber:2},{berry:4,herb:3,fiber:3,wood:2}]},

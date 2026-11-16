@@ -64,6 +64,6 @@ function baseAct(p,a){if(G.phase!=='prep')return '拠点でしかできません
   case 'donate':{const m=a.m,have=pl.store[m]||0,n=a.n==='all'?have:Math.min(a.n|0,have);if(!MAT[m]||n<=0)return '寄付できる素材がありません';pl.store[m]-=n;const o={t:'give',m,n};shareOp(o);HOOK.op(o);ev('donate',{m,n});return ''}
   case 'build':case 'research':case 'job':{const er=shareOp(a);if(!er)HOOK.op(a);return er}
   case 'craft':{const r=RECIPE[a.id];if(!r)return '';if(!hasTech(r.tech))return '研究「'+TECH[r.tech].n+'」が必要です';if(facLv('shop')<r.shop)return '工房Lv'+r.shop+'が必要です';if(r.forge&&facLv('forge')<r.forge)return '炉Lv'+r.forge+'が必要です';if(pl.gear.length>=gearMaxOf(pl))return '装備がいっぱいです（いらない装備を手放してください）';if(!canPay(pl.store,r.cost))return '個人倉庫の素材が足りません';pay(pl.store,r.cost);const g=rollGear(a.id,pl);g.u=++pl.gu;pl.gear.push(g);ev('craft',{id:g.id,r:g.r});return ''}
-  case 'pbuild':case 'pup':case 'harvest':return homeAct(p,pl,a);
+  case 'pbuild':case 'pup':case 'harvest':case 'stow':case 'unstow':return homeAct(p,pl,a);
   case 'scrap':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearInUse(p,g.u))return '装備中の物は手放せません';pl.gear=pl.gear.filter(x=>x!==g);return ''}}
  return ''}

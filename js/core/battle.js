@@ -209,7 +209,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
  if(a.t==='walk'){if(G.phase==='field'&&fieldWalk(a.dx,a.dy,a.dt))HOOK.changed();return ''}
  switch(a.t){
   case 'char':if(G.phase==='prep'&&CH[a.c]){p.ch=a.c;setChar(p)}break;
-  case 'pbuild':case 'pup':case 'harvest':case 'equip':case 'donate':case 'build':case 'research':case 'craft':case 'scrap':case 'job':er=baseAct(p,a);break;
+  case 'pbuild':case 'pup':case 'harvest':case 'stow':case 'unstow':case 'equip':case 'donate':case 'build':case 'research':case 'craft':case 'scrap':case 'job':er=baseAct(p,a);break;
   case 'start':if(G.phase!=='prep')return '';startRun(typeof a.sp==='number'&&outs()[a.sp]?a.sp:-1);break;
   case 'move':er=moveP(p,a.x,a.y);break;
   case 'face':er=canAct(p);if(!er&&a.f>=0&&a.f<4)p.f=a.f;break;

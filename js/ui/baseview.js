@@ -62,12 +62,15 @@ Object.assign(ACT,{
  donate(i){const [m,n]=i.split(':');sendAct({t:'donate',m,n:n==='all'?'all':+n})},
  build(i){sendAct({t:'build',id:i})},research(i){sendAct({t:'research',id:i})},craft(i){sendAct({t:'craft',id:i})},scrap(i){sendAct({t:'scrap',g:+i})},
  job(i){const [j,v]=i.split(':');sendAct({t:'job',j,v:+v})},
- pbuild(i){sendAct({t:'pbuild',id:i})},pup(i){sendAct({t:'pup',id:i})},harvest(){sendAct({t:'harvest'})}});
+ pbuild(i){sendAct({t:'pbuild',id:i})},pup(i){sendAct({t:'pup',id:i})},harvest(){sendAct({t:'harvest'})},stow(i){sendAct({t:'stow',g:+i})},unstow(i){sendAct({t:'unstow',g:+i})}});
 /* ---------- 自分の家（個人施設・カードの永久強化） ---------- */
 function tHome(){const p=me(),pl=plOf(p.id),st=pl.store;let h='';
  h+=`<div class="box col"><div class="hd">🏠 自分の施設</div><div class="small">自分だけの施設です。個人倉庫の素材を使い、すぐに建ちます。</div>${Object.keys(PFAC).map(id=>{const f=PFAC[id],lv=pfLv(pl,id),mx=lv>=f.cost.length,nd=!mx&&f.need[lv]&&!hasTech(f.need[lv]);
   return `<div class="it"><div class="tx"><b>${f.em}${f.n}</b> ${lv?'Lv'+lv:'（まだ無い）'}<br><span class="small">${f.d}</span>${mx?'':`<br><span class="small">${lv?'Lv'+(lv+1)+'へ':'建てる'}：${costH(f.cost[lv],st)}${nd?`　<span class="ng">研究「${techN(f.need[lv])}」が必要</span>`:''}</span>`}</div>${mx?'<span class="small">最大</span>':btn('pbuild',lv?'Lvを上げる':'建てる',{i:id,c:'sm '+(nd||!canPay(st,f.cost[lv])?'dim':'pri')})}</div>`}).join('')}</div>`;
  if(pfLv(pl,'garden')){const o=harvestOut(pl),d=harvestDays(pl);h+=`<div class="box col"><div class="hd">🪴 家庭菜園</div><div class="small">${d?d+'日分たまっています：'+matList(o):'まだ実っていません（1日ごとに実ります。7日分までたまります）'}</div><div class="row">${btn('harvest','🧺 収穫する',{c:d?'pri':'dim'})}</div></div>`}
+ if(pfLv(pl,'shed')){const sd=pl.shed||[],fr=pl.gear.filter(g=>!gearInUse(p,g.u)),it=(g,b)=>`<div class="it"><div class="tx"><b>${itemOf(g.id).em}${itemOf(g.id).n}</b> ${gearFxH(g)}${ARM[g.id]?'<br><span class="small">'+armInfo(g)+'</span>':''}</div>${b}</div>`;
+  h+=`<div class="box col"><div class="hd">🗄️ 物置（${sd.length}/${shedMax(pl)}）</div>${sd.length?sd.map(g=>it(g,btn('unstow','取り出す',{i:g.u,c:'sm '+(pl.gear.length>=gearMaxOf(pl)?'dim':'pri')}))).join(''):'<div class="small">まだ何もしまっていません。</div>'}</div>
+  <div class="box col"><div class="hd">しまえる装備（持っている装備 ${pl.gear.length}/${gearMaxOf(pl)}）</div>${fr.length?fr.map(g=>it(g,btn('stow','しまう',{i:g.u,c:'sm '+(sd.length>=shedMax(pl)?'dim':'')}))).join(''):'<div class="small">装備していない装備がありません。</div>'}</div>`}
  const tl=pfLv(pl,'train'),full=cupN(pl)>=cupMax(pl),cc=cupCost(cupN(pl));
  h+=`<div class="box col"><div class="hd">🥋 カードの永久強化（${cupN(pl)}/${cupMax(pl)}種類）</div>${tl?`<div class="small">今のキャラクター（${CH[p.ch].n}）と武器（${EQ[p.w].n}）で、冒険の最初のデッキに入るカードを強化できます。同じカードなら、別の武器・キャラクターでも強化済みになります。${full?'<span class="ng">鍛錬場のLvを上げると、もっと強化できます</span>':'次の強化の素材：'+costH(cc,st)}</div>
  <div class="grid">${baseCards(p).map(id=>{const done=pl.cup&&pl.cup[id];return `<div class="col" style="align-items:center">${cardH(p,{id,up:1})}${done?'<span class="small">✅強化済み</span>':btn('pup','強化する',{i:id,c:'sm '+(full||!canPay(st,cc)?'dim':'pri')})}</div>`}).join('')}</div><div class="small">カードは強化後の性能で表示しています。</div>`:'<div class="small">🥋鍛錬場を建てると、カードを永久に強化できます。</div>'}</div>`;
