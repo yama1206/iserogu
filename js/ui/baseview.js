@@ -12,8 +12,10 @@ function vPrep(){const b=G.world.base,t=ui.tab||'go';
  <div class="tabs">${TABS.map(x=>btn('tab',x[1],{i:x[0],c:'sm '+(t===x[0]?'on':'')})).join('')}</div>
  <div class="pane scroll" data-sc="base-${t}">${({go:tGo,store:tStore,build:tBuild,tech:tTech,craft:tCraft,people:tPeople}[t]||tGo)()}</div>`}
 /* ---------- 出発 ---------- */
+// 同じ世界にいる仲間の様子（オンライン）
+function matesH(){const ms=mates();if(!ms.length)return '';return `<div class="box col"><div class="hd">🔗 同じ世界の仲間</div>${ms.map(m=>`<div class="it"><div class="tx">${m.s?m.s.em:'🙂'} <b>${m.h?'👑':''}${esc(m.name)}</b>　${stH(m.s)}</div></div>`).join('')}<div class="small">冒険はそれぞれ別々です。冒険中の仲間は、フィールドと地図に🔵で表示されます。</div></div>`}
 function tGo(){const p=me(),ch=CH[p.ch],w=EQ[p.w],pl=plOf(p.id),g=gearOf(p);
- return `${partyH()}<div class="row">${G.players.length<2?btn('addp','＋ 仲間を連れていく（2人を1人で操作）',{c:'sm'}):btn('rmp','－ 仲間を外す',{c:'sm'})}</div>
+ return `${matesH()}${partyH()}<div class="row">${G.players.length<2?btn('addp','＋ 仲間を連れていく（2人を1人で操作）',{c:'sm'}):btn('rmp','－ 仲間を外す',{c:'sm'})}</div>
  <div class="box col"><div class="hd">キャラクター${G.players.length>1?'（'+esc(p.name)+'）':''}</div><div class="chs">${CHARS.map(c=>`<button class="btn f chb ${p.ch===c.id?'on':''}" data-a="char" data-i="${c.id}"><div class="pe">${c.em}</div>${c.n}<div class="small">HP${c.hp}・体勢${c.ps}</div></button>`).join('')}</div><div class="small" style="text-align:center">${ch.d}<br>初期カード：${countNames(ch.extra)}</div></div>
  <div class="box col"><div class="hd">装備する武器</div><div class="chs">${pl.gear.map(x=>`<button class="btn f chb ${p.g===x.u?'on':''} ${gearUsed(p,x.u)?'dim':''}" data-a="equip" data-i="${x.u}"><div class="pe">${EQ[x.id].em}</div>${EQ[x.id].n}<div class="small" style="color:${RAR[x.r].c}">${RAR[x.r].n}</div></button>`).join('')}</div><div class="small" style="text-align:center">${g?gearFxH(g)+'<br>':''}${wInfo(w)}</div></div>
  <div class="row">${btn('start','冒険へ出発',{c:'pri',y:1})}</div>`}
