@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.4.0';
+const VERSION='0.4.1';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）

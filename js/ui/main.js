@@ -117,7 +117,7 @@ function render(){const app=$('#app'),sc={};$$('[data-sc]').forEach(e=>sc[e.data
 function vTitle(){return `<div class="title"><div class="ver">v${VERSION} ${btn('reload','更新',{c:'sm'})}</div>
  <div class="icons">🪨🔱🏹🛖🔬✨</div><div class="logo">イセログ</div><div class="sub">〜異世界文明開拓〜<br>v${VERSION}：オンライン協力の試作版（先史時代。拠点の共有・仲間と合流して一緒に戦う）</div>
  <div class="menu"><input class="nm" id="nm" maxlength="10" value="${esc(META.name)}" placeholder="なまえ">
- ${Cloud.on()?`<input class="nm" id="wc" maxlength="6" value="${esc(META.code||'')}" placeholder="世界コード（6けた）" autocapitalize="characters">${btn('wJoin','☁️ この世界に入る',{c:'pri'})}${btn('wNew','☁️ 新しい世界を作る')}${btn('play','ソロで遊ぶ（この端末だけ）')}`:btn('play','冒険をはじめる',{c:'pri'})}${btn('ovHelp','遊び方')}
+ ${Cloud.on()?`<input class="nm" id="wc" maxlength="6" value="${esc(META.code||'')}" placeholder="世界コード（6けた）" autocapitalize="characters">${btn('wJoin','☁️ この世界に入る',{c:'pri'})}${btn('wNew','☁️ 新しい世界を作る')}${btn('play','ソロで遊ぶ（この端末だけ）')}`:btn('play','冒険をはじめる',{c:'pri'})}${btn('ovHelp','遊び方')}${btn('ovXfer','🔑 引き継ぎ・セーブの書き出し')}
  <div class="row">${btn('tBgm','♪ BGM '+(META.bgm?'ON':'OFF'),{c:'sm'})}${btn('tSe','🔊 効果音 '+(META.se?'ON':'OFF'),{c:'sm'})}</div></div></div>`}
 /* ---------- フィールド ---------- */
 function vField(){const n=fieldNear();return `<div class="cb"><canvas id="fv"></canvas><div class="cbt">${G.players.length>1?partyH():''}</div><div class="cbs"></div><div class="fctl">${btn('fAct',n?'✋ '+MAT[n.m].n+'を採集':'✋ 採集',{c:'pri '+(n?'':'dis')})}${Party.fol?btn('pLeave','👋 離れる',{c:'sm'}):Net.role&&!Party.fs.length?btn('fJoin','🤝 合流',{c:'sm dis'}):''}${btn('ovMap','🗺 地図',{c:'sm',y:1})}${btn('ovBag','🎒 荷物 '+bagCount(),{c:'sm'})}</div></div>`}
@@ -148,14 +148,30 @@ function vHome(){const fd=G.fd;return `<div class="pane"><div style="font-size:6
 function dlg(t,b){return `<div class="dlg"><div class="dh">${t}<span class="sp"></span>${btn('ovClose','✕',{c:'sm',b:1})}</div><div class="db scroll" data-sc="ov">${b}</div></div>`}
 function vOverlay(){const o=ui.ov,p=me();if(!o)return '';
  if(o.k==='help')return dlg('遊び方',`<div class="help"><b>■ 拠点</b><br>冒険で集めた素材は「個人倉庫」に入ります。武器の製作は個人倉庫の素材、建築と研究は「共有倉庫」の素材を使います（個人倉庫から寄付。寄付した素材は戻せません）。住民は優先度に合わせて自動で働き、時間がたつと研究や建築が進みます（現実1秒＝ゲーム内1分。冒険中も進みます）。研究・建築・製作・装備の変更は拠点でしかできません。<br><b>■ 製作とレアリティ</b><br>武器は作るたびにレアリティ（コモン〜レジェンダリー）が決まり、高いほど武器のカードのダメージとブロックが上がり、追加効果が付きます。<br><b>■ 探索</b><br>フィールドを8方向に歩きます（画面をなぞる／方向キー・WASD／スティック）。光っている素材に近づいて「採集」。歩いていると敵に出会い、拠点から遠いほど敵が増えます。⚠️強敵と👑ボスは決まった場所にいます。右上の小さな地図と「地図」で歩いた所を確認できます。<br><b>■ 帰還</b><br>メニュー（☰）の「拠点へ帰還する」で、荷物を個人倉庫に持ち帰れます。全員が倒れると強制帰還になり、荷物の${CFG.loseBag*100}%を失います。<br><b>■ オンライン</b><br>同じ世界コードで入ると、拠点（施設・研究・住民・共有倉庫・地図）を仲間と共有できます。最初に入った人がホスト（👑）になり、時間を進めてクラウドに保存します。ホストが抜けると、残っている人が自動でホストを引き継ぎます。冒険はそれぞれ別々に進みますが、フィールドで仲間のコマ（青い輪）に近づいて「🤝合流」を押すと、同じパーティーになって一緒に戦えます（近づかれた側がリーダーで、歩くのはリーダー。戦闘中の仲間には「⚔️加勢」で途中から入れ、次のターンから行動できます）。戦利品と採集は1人ずつ手に入り、リーダーが帰還すると全員が帰還します。「👋離れる」でいつでも1人に戻れます（同時に${CFG.netMax}人まで）。冒険中の仲間はフィールドと地図に🔵で表示され、拠点の「出発」タブやメニューで仲間の様子（拠点・冒険中・戦闘中）が見られます。<br><b>■ 戦闘の流れ</b><br>8×8マスの戦場で戦います。自分のターンに「移動（1回・3歩ぶん）」と「カード（⚡${CFG.energy}・手札${CFG.handSize}枚）」を好きな順で使い、「ターン終了」で敵が動きます。<br><b>■ オートとスキップ</b><br>「🤖オート」を押すと、味方が自動で戦います（もう一度押すと手動に戻る）。弱い敵との戦闘では最初のターンに「⏩スキップ」が出て、少しダメージを受けるかわりにすぐ勝利できます（強敵・ボスは不可）。<br><b>■ 行動予告</b><br>敵の頭上に次の行動が出ます。敵をタップすると、攻撃が届く範囲（オレンジ）が見られます。<br><b>■ 向き</b><br>側面から：HP×${CFG.dirHp.side}・体勢×${CFG.dirPs.side}／背後から：HP×${CFG.dirHp.back}・体勢×${CFG.dirPs.back}。地面の矢印が向きです。移動や攻撃で向きが変わり、「向き」でいつでも変えられます。仲間と敵をはさむと1段階有利になります。<br><b>■ 体勢値（黄色のバー）</b><br>0になると「体勢崩し」：次の行動を1回休み、受けるダメージ×${CFG.brokenDmg}。休んだら全回復します。棍棒は体勢を崩しやすく、弓や投石は崩しにくいです。<br><b>■ 地形</b><br>${Object.values(TER).map(t=>t.n+'：'+t.d).join('<br>')}<br><b>■ 戦闘不能と救助</b><br>HP0で戦闘不能。となりのマスの仲間が「救助」（⚡${CFG.rescueCost}）を選び、次のターン開始まで攻撃を受けなければ復帰します。${CFG.rescueTurns}ターン以内に救助されないか、全員が倒れると拠点へ強制帰還です（1人の時は戦闘不能＝強制帰還）。<br><b>■ 操作</b><br>タッチ・マウス：タップ／クリック<br>キーボード：矢印キーで移動、Enter/Zで決定、Esc/Xで戻る、Eでターン終了、Cでマスを調べる、Q/Wで対象・キャラ切り替え、Mでメニュー<br>コントローラー：十字キー/スティックで移動（戦場では上＝奥）、Aで決定、Bで戻る、Yでターン終了、Xでマスを調べる、LB/RBで対象・キャラ切り替え、STARTでメニュー</div>`);
+ if(o.k==='xfer')return dlg('🔑 引き継ぎ',`<div class="help"><b>■ この端末の引き継ぎコード</b><br>別の端末でこのコードを入れると、同じ「なまえ」と「プレイヤー」で遊べます（クラウドの世界の個人倉庫・装備もそのまま使えます）。人に教えないでください。</div>
+  <input class="nm" id="xc0" readonly value="${xferCode()}" style="width:100%;font-size:12px">${btn('xCopy','📋 コードをコピー')}
+  <div class="help"><b>■ 別の端末から引き継ぐ</b><br>前の端末のコードを入れてください。この端末のプレイヤーは置き換わります（ソロのセーブは別。下の「読み込む」を使ってください）。引き継いだあと、前の端末で同時に遊ぶのはやめてください。</div>
+  <input class="nm" id="xc" placeholder="引き継ぎコード" style="width:100%;font-size:12px">${btn('xUse','🔑 このコードで引き継ぐ',{c:'pri'})}
+  <div class="help"><b>■ ソロのセーブ</b><br>ソロの世界（この端末だけのセーブ）をファイルに書き出し、別の端末で読み込めます。</div>
+  <div class="row">${btn('wExp','📤 書き出す')}${btn('wImp','📥 読み込む')}</div>`);
  if(o.k==='map')return dlg('🗺 地図',`<canvas id="mapcv"></canvas><div class="small">🟡自分　🔵仲間　⚪拠点　🔴強敵　🟣ボス　白い点＝採集ポイント<br>歩いた所のまわりが地図に書き込まれます。</div>`);
  if(o.k==='bag')return dlg('🎒 荷物',`<div>${matList(G.fd&&G.fd.bag)}</div><div class="small">個人倉庫：${matList(plOf(MY).store)}<br>荷物は拠点へ帰還すると個人倉庫に入ります。</div>`);
- if(o.k==='menu')return dlg('メニュー',`<div class="menu">${G.phase==='field'?btn('ret',Party.fol?'🏠 パーティーを離れて帰還する':Party.fs.length?'🏠 パーティーで拠点へ帰還する':'🏠 拠点へ帰還する',{c:'pri'}):''}${G.phase==='field'&&Party.fol?btn('pLeave','👋 パーティーを離れる'):''}${G.phase==='field'&&Party.fs.length?btn('pBreak','👋 パーティーを解散する'):''}${btn('tBgm','♪ BGM '+(META.bgm?'ON':'OFF'))}${btn('tSe','🔊 効果音 '+(META.se?'ON':'OFF'))}${btn('ovHelp','遊び方')}${btn('reload','更新（再読み込み）')}${btn('leave','タイトルへ戻る')}</div><div class="small">v${VERSION}${netInfoH()}</div>`);
+ if(o.k==='menu')return dlg('メニュー',`<div class="menu">${G.phase==='field'?btn('ret',Party.fol?'🏠 パーティーを離れて帰還する':Party.fs.length?'🏠 パーティーで拠点へ帰還する':'🏠 拠点へ帰還する',{c:'pri'}):''}${G.phase==='field'&&Party.fol?btn('pLeave','👋 パーティーを離れる'):''}${G.phase==='field'&&Party.fs.length?btn('pBreak','👋 パーティーを解散する'):''}${btn('tBgm','♪ BGM '+(META.bgm?'ON':'OFF'))}${btn('tSe','🔊 効果音 '+(META.se?'ON':'OFF'))}${btn('ovHelp','遊び方')}${btn('ovXfer','🔑 引き継ぎコード')}${btn('reload','更新（再読み込み）')}${btn('leave','タイトルへ戻る')}</div><div class="small">v${VERSION}${netInfoH()}</div>`);
  if(o.k==='deck'&&p){const d=p.deck.slice().sort((a,b)=>(a.src?0:1)-(b.src?0:1)||a.id.localeCompare(b.id));return dlg('🃏 デッキ（'+p.deck.length+'枚）：'+esc(p.name),`<div class="small">${EQ[p.w].em}${EQ[p.w].n}：${wInfo(EQ[p.w])}</div><div class="grid">${d.map(c=>cardH(p,c,{k:'dk'+c.u})).join('')}</div>`)}
  return ''}
 /* ================= 操作 ================= */
 const ACT={
- reload(){location.reload()},play(){Cloud.code=null;enterWorld(LS.get('iserogu_world',null))},
+ reload(){location.reload()},ovXfer(){ui.ov={k:'xfer'}},
+ xCopy(){const c=xferCode();(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('📋 コピーしました'),()=>{const e=$('#xc0');if(e){e.select();toast('コードを長押ししてコピーしてください')}})},
+ xUse(){const e=$('#xc'),d=xferRead(e?e.value:'');if(!d)return toast('引き継ぎコードが正しくありません');if(d.p===META.pid)return toast('この端末と同じコードです');
+  if(!confirm('「'+d.n+'」として引き継ぎますか？\nこの端末の今のプレイヤー（'+META.name+'）は使えなくなります。'))return;
+  if(G)ACT.leave();META.pid=d.p;META.name=d.n;if(d.c)META.code=d.c;saveMeta();toast('🔑 引き継ぎました。読み込み直します…');setTimeout(()=>location.reload(),800)},
+ wExp(){const w=LS.get('iserogu_world',null);if(!w)return toast('ソロのセーブがありません');const b=new Blob([JSON.stringify({app:'iserogu',v:VERSION,at:Date.now(),world:w})],{type:'application/json'}),a=document.createElement('a'),d=new Date();
+  a.href=URL.createObjectURL(b);a.download='iserogu_solo_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);toast('📤 書き出しました')},
+ wImp(){const f=document.createElement('input');f.type='file';f.accept='.json,application/json';f.onchange=()=>{const fl=f.files[0];if(!fl)return;const r=new FileReader();
+  r.onload=()=>{let d;try{d=JSON.parse(r.result)}catch(e){}if(!d||d.app!=='iserogu'||!d.world||typeof d.world!=='object')return toast('イセログのセーブではありません');
+   const pl=d.world.pl,ks=pl?Object.keys(pl):[];if(pl&&!pl[META.pid]&&ks.length===1){pl[META.pid]=pl[ks[0]];delete pl[ks[0]]}   // 別の端末のセーブ：個人倉庫・装備をこの端末のプレイヤーに付け替える
+   if(LS.get('iserogu_world',null)&&!confirm('この端末のソロのセーブを、読み込んだセーブで上書きしますか？'))return;LS.set('iserogu_world',d.world);toast('📥 ソロのセーブを読み込みました');render()};r.readAsText(fl)};f.click()},play(){Cloud.code=null;enterWorld(LS.get('iserogu_world',null))},
  wNew(){cloudEnter(Cloud.newCode(),true)},wJoin(){const e=$('#wc'),c=Cloud.norm(e?e.value:META.code);if(c.length!==6)return toast('世界コード（英数字6けた）を入れてください');cloudEnter(c,false)},
  leave(){Party.quit();Cloud.flush();Net.leave();mateW={};Cloud.code=null;G=null;scr='title';ui.ov=null;ui.mode=null;ui.sel=null},
  tBgm(){META.bgm=META.bgm?0:1;saveMeta()},tSe(){META.se=META.se?0:1;saveMeta()},
@@ -186,9 +202,12 @@ async function cloudEnter(code,make){if(Cloud.busy)return;Cloud.busy=true;toast(
   Cloud.code=code;enterWorld(w);if(make)await Cloud.save(code,G.world);
   META.code=code;saveMeta();LS.set(wkey(),G.world);Cloud.dirty=false;Cloud.err='';toast(make?'☁️ 新しい世界を作りました。世界コード：'+code:r.role==='host'?'☁️ 世界「'+code+'」に入りました（あなたがホスト）':'🔗 世界「'+code+'」に入りました（ホスト：'+((Net.ms.find(x=>x.h)||{}).name||'？')+'）')}
  catch(e){Net.leave();Cloud.code=null;G=null;scr='title';toast('☁️ '+e.message)}Cloud.busy=false;render()}
+// 引き継ぎコード：ISR- のあとに {p:プレイヤーID, n:なまえ, c:世界コード} をbase64にしたもの
+function xferCode(){return 'ISR-'+btoa(unescape(encodeURIComponent(JSON.stringify({p:META.pid,n:META.name,c:META.code||''})))).replace(/=+$/,'')}
+function xferRead(s){s=String(s||'').trim().replace(/\s/g,'');if(!/^ISR-/i.test(s))return null;try{const d=JSON.parse(decodeURIComponent(escape(atob(s.slice(4)))));return d&&typeof d.p==='string'&&/^u[a-z0-9]{4,}$/.test(d.p)?{p:d.p,n:String(d.n||'旅人').slice(0,10),c:typeof d.c==='string'?d.c:''}:null}catch(e){return null}}
 function saveName(){const e=$('#nm');if(e){META.name=(e.value.trim()||META.name).slice(0,10);saveMeta()}}
 function doClick(el){const a=el.closest('[data-a]');if(!a)return;auInit();if(a.classList.contains('dis'))return sfx('no');const f=ACT[a.dataset.a];if(!f)return;if(a.classList.contains('f')){ui.fk=a.dataset.k;ui.fr=a.getBoundingClientRect()}if(!/^(card|rwSel|chip)$/.test(a.dataset.a))sfx('click');f(a.dataset.i,a);render()}
-document.addEventListener('click',e=>{if(e.target.id==='nm'||e.target.id==='wc'||e.target.id==='cv'||e.target.id==='fv')return;doClick(e.target)});
+document.addEventListener('click',e=>{if(e.target.id==='nm'||e.target.id==='wc'||e.target.id==='xc'||e.target.id==='xc0'||e.target.id==='cv'||e.target.id==='fv')return;doClick(e.target)});
 document.addEventListener('pointerdown',e=>{if(e.pointerType)setMode(false);auInit()});
 document.addEventListener('change',e=>{if(e.target.id==='nm')saveName()});
 // オートバトル：味方のターンの間、順番に1つずつ行動させる
