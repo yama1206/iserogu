@@ -55,7 +55,7 @@ function shareOp(a){const w=ensureWorld(),b=w.base,sh=w.share;
 /* ---------- 拠点での行動（拠点にいる時だけ） ---------- */
 function baseAct(p,a){if(G.phase!=='prep')return '拠点でしかできません';const w=ensureWorld(),b=w.base,pl=plOf(p.id),sh=w.share;
  switch(a.t){
-  case 'equip':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearUsed(p,g.u))return '仲間が装備しています';if(ARM[g.id]){const k=SLOTS[ARM[g.id].sl].k;p[k]=p[k]===g.u?0:g.u}else p.g=g.u;setChar(p);return ''}   // 防具は、もう一度押すと外す
+  case 'equip':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearUsed(p,g.u))return '仲間が装備しています';if(ARM[g.id]){const k=SLOTS[ARM[g.id].sl].k;if(ARM[g.id].sl==='s'&&p[k]!==g.u&&!shieldOk(p))return '両手武器を持っているので、盾は装備できません';p[k]=p[k]===g.u?0:g.u}else p.g=g.u;setChar(p);return ''}   // 防具は、もう一度押すと外す
   case 'donate':{const m=a.m,have=pl.store[m]||0,n=a.n==='all'?have:Math.min(a.n|0,have);if(!MAT[m]||n<=0)return '寄付できる素材がありません';pl.store[m]-=n;const o={t:'give',m,n};shareOp(o);HOOK.op(o);ev('donate',{m,n});return ''}
   case 'build':case 'research':case 'job':{const er=shareOp(a);if(!er)HOOK.op(a);return er}
   case 'craft':{const r=RECIPE[a.id];if(!r)return '';if(!hasTech(r.tech))return '研究「'+TECH[r.tech].n+'」が必要です';if(facLv('shop')<r.shop)return '工房Lv'+r.shop+'が必要です';if(pl.gear.length>=CFG.gearMax)return '装備がいっぱいです（いらない装備を手放してください）';if(!canPay(pl.store,r.cost))return '個人倉庫の素材が足りません';pay(pl.store,r.cost);const g=rollGear(a.id);g.u=++pl.gu;pl.gear.push(g);ev('craft',{id:g.id,r:g.r});return ''}

@@ -16,7 +16,8 @@ function addPlayer(id,name){if(byId(id))return byId(id);if(G.players.length>=CFG
 function removePlayer(id){G.players=G.players.filter(p=>p.id!==id)}
 function cinst(id,src){const c={u:++G.uid,id,up:0};if(src)c.src=src;return c}
 function setChar(p){const ch=CH[p.ch],g=gearOf(p)||gearFree(p);if(g){p.g=g.u;p.w=g.id;p.rm=RAR[g.r].m;p.gfx=g.fx}
- p.apas=null;SLOTL.forEach(sl=>{const ar=armorOf(p,sl);if(!ar){p[SLOTS[sl].k]=0;return}if(sl==='s'&&!shieldOk(p))return;const s=armStat(ar),o=p.apas||(p.apas={aps:0});for(const k in ar.fx||{})o[k]=(o[k]||0)+ar.fx[k];o.maxhp=(o.maxhp||0)+s.hp;o.dmgRed=(o.dmgRed||0)+s.red;o.move=(o.move||0)+s.mv;o.blockStart=(o.blockStart||0)+s.blk;o.aps+=s.ps});   // 防具（頭・胴・足）の性能と追加効果をまとめる   // 装備（製作した実物）から武器・レアリティ倍率・追加効果を決める
+ p.apas=null;SLOTL.forEach(sl=>{const ar=armorOf(p,sl);if(!ar){p[SLOTS[sl].k]=0;return}if(sl==='s'&&!shieldOk(p)){p.as=0;return}   // 両手武器なら盾を外す
+ const s=armStat(ar),o=p.apas||(p.apas={aps:0});for(const k in ar.fx||{})o[k]=(o[k]||0)+ar.fx[k];o.maxhp=(o.maxhp||0)+s.hp;o.dmgRed=(o.dmgRed||0)+s.red;o.move=(o.move||0)+s.mv;o.blockStart=(o.blockStart||0)+s.blk;o.aps+=s.ps});   // 防具（頭・胴・足）の性能と追加効果をまとめる   // 装備（製作した実物）から武器・レアリティ倍率・追加効果を決める
  p.mhp=ch.hp;p.mps=ch.ps+(p.apas?p.apas.aps:0);p.eq=[p.w];p.deck=[cinst('punch'),cinst('guard'),cinst('guard'),cinst('step')];EQ[p.w].cards.forEach(id=>p.deck.push(cinst(id,p.w)));ch.extra.forEach(id=>p.deck.push(cinst(id)));
  p.hp=maxHp(p);p.ps=p.mps;p.down=false;p.out=false;p.broken=false;p.rw=[];p.st={};p.blk=0;p.hand=[];p.draw=[];p.disc=[];p.exh=[]}
 function setWeapon(p,w){const old=p.w;let ups=p.deck.filter(c=>c.src===old&&c.up).length;const at=Math.max(0,p.deck.findIndex(c=>c.src===old));p.deck=p.deck.filter(c=>c.src!==old);
