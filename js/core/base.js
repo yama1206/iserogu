@@ -39,14 +39,21 @@ function baseTick(sec){if(!G)return 0;const b=ensureWorld().base;b.acc=(b.acc||0
 function rarOdds(){const lv=facLv('shop'),ws=RAR.map((r,i)=>i?r.p*(1+CFG.rarShop*Math.max(0,lv-1)):r.p),t=ws.reduce((a,c)=>a+c,0);return ws.map(w=>w/t)}
 function rollGear(id){const ws=rarOdds();let x=Math.random(),r=0;for(let i=0;i<ws.length;i++){x-=ws[i];if(x<0){r=i;break}}
  const n=rng(RAR[r].fx[0],RAR[r].fx[1]),fx={};shuf(GFX.slice()).slice(0,n).forEach(g=>fx[g[0]]=g[1]);return {id,r,fx}}
+/* ---------- 共有分（共有倉庫・建築・研究・仕事）への操作。オンラインでは、参加者の操作をホストがこれで反映する ---------- */
+function shareOp(a){const w=ensureWorld(),b=w.base,sh=w.share;
+ switch(a.t){
+  case 'give':{const n=a.n|0;if(!MAT[a.m]||n<=0||n>99999)return '';sh[a.m]=(sh[a.m]||0)+n;return ''}
+  case 'build':{const f=FAC[a.id];if(!f)return '';const lv=facLv(a.id);if(lv>=f.cost.length)return 'これ以上は上げられません';if(b.bld)return '建築中の施設があります（建築は1つずつ）';if(f.need[lv]&&!hasTech(f.need[lv]))return '研究「'+TECH[f.need[lv]].n+'」が必要です';if(!canPay(sh,f.cost[lv]))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,f.cost[lv]);b.bld={id:a.id,w:0};return ''}
+  case 'research':{const t=TECH[a.id];if(!t||hasTech(a.id))return '';if(b.res)return '研究中の技術があります（研究は1つずつ）';if(facLv('lab')<t.lab)return '研究小屋Lv'+t.lab+'が必要です';if((t.req||[]).some(r=>!hasTech(r)))return '先に「'+(t.req||[]).filter(r=>!hasTech(r)).map(r=>TECH[r].n).join('・')+'」の研究が必要です';if(!canPay(sh,t.cost))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,t.cost);b.res={id:a.id,rp:0};return ''}
+  case 'job':{if(!JOBS[a.j])return '';b.job[a.j]=Math.max(0,Math.min(3,a.v|0));return ''}
+ }
+ return ''}
 /* ---------- 拠点での行動（拠点にいる時だけ） ---------- */
 function baseAct(p,a){if(G.phase!=='prep')return '拠点でしかできません';const w=ensureWorld(),b=w.base,pl=plOf(p.id),sh=w.share;
  switch(a.t){
   case 'equip':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(gearUsed(p,g.u))return '仲間が装備しています';p.g=g.u;setChar(p);return ''}
-  case 'donate':{const m=a.m,have=pl.store[m]||0,n=a.n==='all'?have:Math.min(a.n|0,have);if(!MAT[m]||n<=0)return '寄付できる素材がありません';pl.store[m]-=n;sh[m]=(sh[m]||0)+n;ev('donate',{m,n});return ''}
-  case 'build':{const f=FAC[a.id];if(!f)return '';const lv=facLv(a.id);if(lv>=f.cost.length)return 'これ以上は上げられません';if(b.bld)return '建築中の施設があります（建築は1つずつ）';if(f.need[lv]&&!hasTech(f.need[lv]))return '研究「'+TECH[f.need[lv]].n+'」が必要です';if(!canPay(sh,f.cost[lv]))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,f.cost[lv]);b.bld={id:a.id,w:0};return ''}
-  case 'research':{const t=TECH[a.id];if(!t||hasTech(a.id))return '';if(b.res)return '研究中の技術があります（研究は1つずつ）';if(facLv('lab')<t.lab)return '研究小屋Lv'+t.lab+'が必要です';if((t.req||[]).some(r=>!hasTech(r)))return '先に「'+(t.req||[]).filter(r=>!hasTech(r)).map(r=>TECH[r].n).join('・')+'」の研究が必要です';if(!canPay(sh,t.cost))return '共有倉庫の素材が足りません（倉庫で寄付できます）';pay(sh,t.cost);b.res={id:a.id,rp:0};return ''}
+  case 'donate':{const m=a.m,have=pl.store[m]||0,n=a.n==='all'?have:Math.min(a.n|0,have);if(!MAT[m]||n<=0)return '寄付できる素材がありません';pl.store[m]-=n;const o={t:'give',m,n};shareOp(o);HOOK.op(o);ev('donate',{m,n});return ''}
+  case 'build':case 'research':case 'job':{const er=shareOp(a);if(!er)HOOK.op(a);return er}
   case 'craft':{const r=RECIPE[a.id];if(!r)return '';if(!hasTech(r.tech))return '研究「'+TECH[r.tech].n+'」が必要です';if(facLv('shop')<r.shop)return '工房Lv'+r.shop+'が必要です';if(pl.gear.length>=CFG.gearMax)return '装備がいっぱいです（いらない装備を手放してください）';if(!canPay(pl.store,r.cost))return '個人倉庫の素材が足りません';pay(pl.store,r.cost);const g=rollGear(a.id);g.u=++pl.gu;pl.gear.push(g);ev('craft',{id:g.id,r:g.r});return ''}
-  case 'scrap':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(G.players.some(q=>ownerId(q.id)===ownerId(p.id)&&q.g===g.u))return '装備中の物は手放せません';pl.gear=pl.gear.filter(x=>x!==g);return ''}
-  case 'job':{if(!JOBS[a.j])return '';b.job[a.j]=Math.max(0,Math.min(3,a.v|0));return ''}}
+  case 'scrap':{const g=pl.gear.find(x=>x.u===a.g);if(!g)return '';if(G.players.some(q=>ownerId(q.id)===ownerId(p.id)&&q.g===g.u))return '装備中の物は手放せません';pl.gear=pl.gear.filter(x=>x!==g);return ''}}
  return ''}

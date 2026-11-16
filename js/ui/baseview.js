@@ -8,7 +8,7 @@ function gearFxH(g){const fx=Object.keys(g.fx||{}).map(k=>GFXN[k][2]);return `<s
 function pgH(v,max){return `<div class="pg"><i style="width:${Math.min(100,v/max*100)}%"></i></div>`}
 function etaH(left,rate){return rate>0?'あと約'+Math.ceil(left/rate)+'時間（現実'+Math.ceil(left/rate*60/CFG.minPerSec/60)+'分）':'<span class="ng">担当の住民がいません（住民タブで優先度を上げてください）</span>'}
 function vPrep(){const b=G.world.base,t=ui.tab||'go';
- return `<div class="top"><b>🛖 拠点</b><span>${timeH()}</span><span>👥${b.pop}</span><span>🍖${Math.floor(b.food)}</span><span class="sp"></span>${btn('ovHelp','？',{c:'sm'})}${btn('ovMenu','☰',{c:'sm',b:1})}</div>
+ return `<div class="top"><b>🛖 拠点</b><span>${timeH()}</span><span>👥${b.pop}</span><span>🍖${Math.floor(b.food)}</span>${Net.role?`<span>${Net.role==='host'?'👑':Net.conn?'🔗':'⏳'}${Net.members().length}人</span>`:''}<span class="sp"></span>${btn('ovHelp','？',{c:'sm'})}${btn('ovMenu','☰',{c:'sm',b:1})}</div>
  <div class="tabs">${TABS.map(x=>btn('tab',x[1],{i:x[0],c:'sm '+(t===x[0]?'on':'')})).join('')}</div>
  <div class="pane scroll" data-sc="base-${t}">${({go:tGo,store:tStore,build:tBuild,tech:tTech,craft:tCraft,people:tPeople}[t]||tGo)()}</div>`}
 /* ---------- 出発 ---------- */

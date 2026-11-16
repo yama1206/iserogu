@@ -3,7 +3,7 @@
 const R=n=>Math.floor(Math.random()*n),pick=a=>a[R(a.length)],rng=(a,b)=>a+R(b-a+1);
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=R(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 let G=null;
-const HOOK={sched:(f,ms)=>setTimeout(f,ms),changed:()=>{}};
+const HOOK={sched:(f,ms)=>setTimeout(f,ms),changed:()=>{},op:()=>{}};   // op＝共有分への操作が成功した時（オンラインの参加者がホストへ送る）
 // 向き：0=奥 1=右 2=手前 3=左（マス座標は x=左→右、y=奥→手前）
 const DIR=[[0,-1],[1,0],[0,1],[-1,0]],DIRN=['奥','右','手前','左'],RELN={front:'正面',side:'側面',back:'背後'};
 function newGame(world){G={v:2,phase:'prep',players:[],cb:null,fd:null,world:world&&world.seed?world:newWorld(),log:[],evs:[],evn:0,uid:0};ensureWorld();return G}

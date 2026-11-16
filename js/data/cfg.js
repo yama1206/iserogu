@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.3.3';
+const VERSION='0.3.4';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -43,7 +43,13 @@ const CFG={
  shareCap:[40,40], // 住民が共有倉庫にためられる量：基本＋共有倉庫Lvごと（寄付はこの上限に関係なく入る）
  rarShop:.3,       // 工房Lv2から、コモン以外の出やすさがLvごとにこの割合だけ上がる
  gearMax:40,       // 持てる装備の数
- fireHeal:.1       // 「火の利用」で増える勝利時の回復
+ fireHeal:.1,      // 「火の利用」で増える勝利時の回復
+ // ---- オンライン（v0.3.4） ----
+ netMax:4,         // 同時に入れる人数（ホストをふくむ）
+ netBeat:6000,     // ホストが掲示板を更新する間隔（ミリ秒）
+ netTtl:20000,     // 掲示板がこれより古ければ、ホストがいないとみなす（ミリ秒）
+ netSync:2000,     // ホストが世界を配る間隔（ミリ秒。変わった時だけ送る）
+ netLost:15000     // 参加者：ホストからこれだけ何も届かなければ、切れたとみなす（ミリ秒）
 };
 // 武器種ごとの性質（射程・体勢ダメージ倍率）。レアリティや時代では変わらない
 const WPN={spear:{rg:2,pm:1},club:{rg:1,pm:1.5},sling:{rg:4,pm:.5},staff:{rg:1,pm:.8},knife:{rg:1,pm:.5},axe:{rg:1,pm:.7},bow:{rg:5,pm:.4},none:{rg:1,pm:.6}};
