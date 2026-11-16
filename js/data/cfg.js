@@ -1,7 +1,8 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.11.1';
+const VERSION='0.11.2';
 const CFG={
+ deckMax:20,      // v0.11.2：冒険中のデッキの上限（超える時は入れ替え）
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
  dirHp:{front:1,side:1.25,back:1.5},dirPs:{front:1,side:1.5,back:2},

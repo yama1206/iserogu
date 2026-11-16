@@ -217,7 +217,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
   case 'end':er=endTurn(p);break;
   case 'rescue':er=rescue(p,a.p);break;
   case 'skip':er=skipCombat();break;
-  case 'pick':{const r=p.rw[0];if(!r||G.phase!=='reward')return '';if(a.up!=null&&r.k==='card'){const c=p.deck.find(x=>x.u===a.up&&!x.up);if(!c)return '強化できないカードです';c.up=1;log(p.name+'は「'+CARDS[c.id].n+'」を強化した。')}else if(a.i!=null&&a.i>=0){const id=r.o[a.i];if(!id)return '';if(r.k==='card')p.deck.push(cinst(id));else{setWeapon(p,id);log(p.name+'は「'+EQ[id].n+'」を手に入れた。')}}p.rw.shift();if(!p.rw.length)p.done=true;break}
+  case 'pick':{const r=p.rw[0];if(!r||G.phase!=='reward')return '';if(a.up!=null&&r.k==='card'){const c=p.deck.find(x=>x.u===a.up&&!x.up);if(!c)return '強化できないカードです';c.up=1;log(p.name+'は「'+CARDS[c.id].n+'」を強化した。')}else if(a.i!=null&&a.i>=0){const id=r.o[a.i];if(!id)return '';if(r.k==='card'){if(p.deck.length>=CFG.deckMax){const j=p.deck.findIndex(x=>x.u===a.out);if(j<0)return 'デッキが'+CFG.deckMax+'枚です。入れ替えるカードを選んでください';log(p.name+'は「'+CARDS[p.deck[j].id].n+'」を「'+CARDS[id].n+'」と入れ替えた。');p.deck.splice(j,1)}p.deck.push(cinst(id))}else{setWeapon(p,id);log(p.name+'は「'+EQ[id].n+'」を手に入れた。')}}p.rw.shift();if(!p.rw.length)p.done=true;break}
   case 'gather':if(G.phase!=='field')return '';er=fieldGather(p.id);break;
   case 'return':er=fieldReturn();break;
   case 'outpost':er=fieldOutpost(p.id);break;
