@@ -53,7 +53,7 @@ const FV={jt:0,v:View.create(),keys:{},joy:null,tile:40,top:0,last:0,trail:[],im
  // 地図の画面（オーバーレイ）
  full(){const c=document.getElementById('mapcv');if(!c||!G||!G.fd||!WORLD)return;const S=Math.floor(Math.min(innerWidth-50,innerHeight*.6,560)),d=Math.min(2,devicePixelRatio||1);c.style.width=c.style.height=S+'px';c.width=c.height=S*d;const k=c.getContext('2d');k.setTransform(d,0,0,d,0,0);k.imageSmoothingEnabled=false;k.drawImage(this.image(),0,0,S,S);this.marks(k,0,0,S/WORLD.N,true)}
 };
-document.addEventListener('pointermove',e=>{const j=FV.joy;if(!j||e.pointerId!==j.id)return;const c=document.getElementById('fv');if(!c)return;const r=c.getBoundingClientRect();j.dx=e.clientX-r.left-j.x0;j.dy=e.clientY-r.top-j.y0});
+document.addEventListener('pointermove',e=>{const j=FV.joy;if(!j||e.pointerId!==j.id)return;const c=document.getElementById(j.c||'fv');if(!c)return;const r=c.getBoundingClientRect();j.dx=e.clientX-r.left-j.x0;j.dy=e.clientY-r.top-j.y0});
 ['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,e=>{if(FV.joy&&e.pointerId===FV.joy.id)FV.joy=null}));
 document.addEventListener('keydown',e=>{if(e.target.tagName!=='INPUT')FV.keys[e.key.toLowerCase()]=1});
 document.addEventListener('keyup',e=>{FV.keys[e.key.toLowerCase()]=0});
