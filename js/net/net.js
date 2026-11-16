@@ -93,8 +93,8 @@ const Net={role:null,code:null,peer:null,nonce:'',off:0,hbOk:0,host:null,conn:nu
  // 第4段階：ほかの人へのメッセージ（参加者どうしはホストが中継する）
  to(pid,m){if(this.role==='host'){const g=this.gs.find(x=>x.pid===pid);if(!g||!g.c.open)return false;try{g.c.send({t:'rl',f:MY,m});return true}catch(e){return false}}
   if(this.role==='guest'&&this.conn&&this.conn.open){this.tx({t:'rl',to:pid,m});return true}return false},
- orSeen(s){if(!Array.isArray(s)||!G)return;const w=G.world,o=Array.isArray(w.seen)?w.seen:[];let ch=false;
-  if(o.length!==s.length){if(s.length>o.length){w.seen=s.slice();ch=true}}else for(let i=0;i<s.length;i++)if(s[i]&&!o[i]){o[i]=1;ch=true}
+ orSeen(s){if(!s||typeof s!=='object'||Array.isArray(s)||!G)return;const w=G.world;if(!w.seen||Array.isArray(w.seen))w.seen={};const o=w.seen;let ch=false;   // 地図は "bx,by":1 の形（v0.6.0〜）
+  for(const k in s)if(s[k]&&!o[k]){o[k]=1;ch=true}
   if(ch){w.sv=(w.sv||0)+1;Cloud.mark()}},
  flushSoon(){if(!this.ft)this.ft=setTimeout(()=>{this.ft=0;Cloud.flush()},3000)},
  cast(m){this.lastTx=Date.now();this.gs.forEach(g=>{try{if(g.c.open)g.c.send(m)}catch(e){}})},
@@ -113,7 +113,7 @@ const Net={role:null,code:null,peer:null,nonce:'',off:0,hbOk:0,host:null,conn:nu
  drain(){while(this.conn&&this.conn.open&&this.q.length)this.tx({t:'op',a:this.q.shift()})},
  syncMine(){if(!G||!this.conn)return;const pl=JSON.stringify(plOf(MY));if(pl!==this.sentPl){this.sentPl=pl;this.tx({t:'pl',pl:plOf(MY)})}
   const st=JSON.stringify(myStat());if(st!==this.sentSt){this.sentSt=st;this.tx({t:'st',s:myStat()})}
-  const se=JSON.stringify(G.world.seen||[]);if(se!==this.sentSeen){this.sentSeen=se;this.tx({t:'seen',seen:G.world.seen})}},
+  const sw=G.world.seen;if(sw&&!Array.isArray(sw)){this.sentSeen=this.sentSeen&&typeof this.sentSeen==='object'?this.sentSeen:{};const nw={};let n=0;for(const k in sw)if(!this.sentSeen[k]){nw[k]=1;this.sentSeen[k]=1;n++}if(n)this.tx({t:'seen',seen:nw})}},   // 新しく見た区画だけ送る
  /* ---------- 1秒ごと ---------- */
  tick(){if(!this.role||!G||scr!=='game')return;const t=Date.now();
   if(this.role==='host'){if(t-this.tBeat>=CFG.netBeat){this.tBeat=t;this.beat()}if(t-this.tSync>=CFG.netSync){this.tSync=t;this.sendW()}this.sendMs()}

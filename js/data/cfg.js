@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.5.0';
+const VERSION='0.6.0';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -21,9 +21,15 @@ const CFG={
  bossWeapons:['mammoth_spear','b_tusk'],
  mobs:['hyena','wolf','boar','snake','monkey'],
  // ---- 探索（v0.2.0） ----
- worldN:64,        // フィールドの広さ（マス）
+ // ---- 広がるフィールド（v0.6.0）：端がなく、近づいた所から種で作る。拠点は(0,0) ----
+ chunk:16,         // 区画の大きさ（マス）。強敵・ボスは区画ごとに決まる
+ homeR:36,         // 拠点のまわりの、草原と森林だけになる範囲（マス）
+ biomeScale:110,   // バイオームの大きさ（大きいほど1つの地域が広い）
+ lvStep:40,lvMax:12,         // 拠点から何マスごとに危険度が1上がるか／危険度の上限
+ lvHp:.18,lvDmg:.1,          // 危険度1あたりの敵のHP・攻撃力の上がり方
+ eliteChunk:.1,bossChunk:.035,bossDist:56, // 区画に強敵がいる確率／ボスがいる確率と、ボスが出始める距離
  walkSpeed:4.2,    // 歩く速さ（マス／秒）
- sight:7,          // 地図に書き込まれる範囲（マス）
+ sight:8,          // 地図に書き込まれる範囲（マス。8×8マスの区画ごと）
  encOn:true,       // ランダムエンカウントのスイッチ
  encBase:.03,encStep:.006,   // 遭遇率：基本＋1歩ごとの上乗せ（遭遇で元に戻る）
  encGrace:5,       // 出発直後・戦闘直後に敵が出ない歩数

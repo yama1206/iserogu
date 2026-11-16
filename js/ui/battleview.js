@@ -13,7 +13,7 @@ const BV={v:View.create(),an:{},fl:[],actE:-1,actT:0,last:0,
  float(k,s,c){const n=this.fl.filter(f=>f.k===k&&performance.now()-f.t<400).length;this.fl.push({k,s,c,t:performance.now()+n*120});if(s[0]==='-'&&this.an[k])this.an[k].hit=performance.now()},
  tick(dt){if(!G||!G.cb)return;const all=G.players.filter(p=>!p.out).concat(G.cb.en);all.forEach(u=>{const a=this.pos(u),t=a.q[0]||u,dx=t.x-a.x,dy=t.y-a.y,d=Math.hypot(dx,dy),s=dt*9;if(d<=s){a.x=t.x;a.y=t.y;if(a.q.length)a.q.shift()}else{a.x+=dx/d*s;a.y+=dy/d*s}})},
  draw(){const v=this.v;if(!v.ctx||!document.getElementById('cv'))return;if(!G||!G.cb)return;const cb=G.cb,N=CFG.grid,p=me(),now=performance.now(),my=p&&cb.ph==='p'&&!p.ended&&!p.down;
-  View.begin(v);View.bg(v,'#8fd0f4','#e6f4dc',cb.field==='forest'?'#3c6e3a':'#5f9a48');
+  View.begin(v);View.bg(v,'#8fd0f4','#e6f4dc',(BIO[cb.field]||BIO.grass).bg);
   // 色を付けるマス
   const blue={},red={},org={},wht={};let lookE=null;const cu=ui.mode?unitAt(ui.cur.x,ui.cur.y):null;if(cu&&cu.side==='e')lookE=cu;
   if(my&&ui.mode==='move'){const rm=reachOf(p,p.mp);for(const k in rm)if(!rm[k].occ&&rm[k].c>0)blue[k]=1;aliveEs().forEach(e=>Object.assign(org,dangerOf(e)))}
