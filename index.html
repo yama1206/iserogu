@@ -44,6 +44,8 @@ input.nm{font:inherit;font-size:16px;padding:8px;border-radius:8px;border:1px so
 .cb canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .cbt,.cbb{position:relative;z-index:1;flex:none}.cbs{flex:1;min-height:90px;pointer-events:none}
 .cbb{background:linear-gradient(transparent,#000c 22px);padding-top:6px}
+.fctl{position:relative;z-index:1;flex:none;display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap;padding:6px 8px calc(8px + env(safe-area-inset-bottom));pointer-events:none}.fctl .btn{pointer-events:auto}
+#mapcv{border:2px solid #a08050;border-radius:6px;image-rendering:pixelated}
 .logl{font-size:11px;color:#f4ecd8;text-align:center;height:28px;overflow:hidden;padding:0 8px;line-height:14px;text-shadow:0 0 3px #000,0 0 3px #000}
 .detail{min-height:44px;margin:2px 6px;padding:5px 8px;background:#000b;border:1px solid #fff2;border-radius:8px;font-size:12px;display:flex;gap:8px;align-items:center}
 .detail .dt{flex:1}
@@ -80,16 +82,19 @@ input.nm{font:inherit;font-size:16px;padding:8px;border-radius:8px;border:1px so
 .cbt{width:54%}.cbb{position:absolute;right:0;top:0;bottom:0;width:46%;background:#000b;padding:2px 0 0;display:flex;flex-direction:column}.hand{flex:1;min-height:0;flex-wrap:wrap;overflow-y:auto;align-content:flex-start;justify-content:center}.logl{text-align:left}}
 </style></head><body>
 <div id="app"></div><div id="ov"></div><div id="toast"></div>
-<script src="js/data/cfg.js?v=0.1.0"></script>
-<script src="js/data/terrain.js?v=0.1.0"></script>
-<script src="js/data/cards.js?v=0.1.0"></script>
-<script src="js/data/weapons.js?v=0.1.0"></script>
-<script src="js/data/enemies.js?v=0.1.0"></script>
-<script src="js/core/battle.js?v=0.1.0"></script>
-<script src="js/core/ai.js?v=0.1.0"></script>
-<script src="js/ui/audio.js?v=0.1.0"></script>
-<script src="js/ui/view.js?v=0.1.0"></script>
-<script src="js/ui/battleview.js?v=0.1.0"></script>
-<script src="js/ui/input.js?v=0.1.0"></script>
-<script src="js/ui/main.js?v=0.1.0"></script>
+<script src="js/data/cfg.js?v=0.2.0"></script>
+<script src="js/data/terrain.js?v=0.2.0"></script>
+<script src="js/data/cards.js?v=0.2.0"></script>
+<script src="js/data/weapons.js?v=0.2.0"></script>
+<script src="js/data/enemies.js?v=0.2.0"></script>
+<script src="js/data/regions.js?v=0.2.0"></script>
+<script src="js/core/battle.js?v=0.2.0"></script>
+<script src="js/core/ai.js?v=0.2.0"></script>
+<script src="js/core/field.js?v=0.2.0"></script>
+<script src="js/ui/audio.js?v=0.2.0"></script>
+<script src="js/ui/view.js?v=0.2.0"></script>
+<script src="js/ui/battleview.js?v=0.2.0"></script>
+<script src="js/ui/fieldview.js?v=0.2.0"></script>
+<script src="js/ui/input.js?v=0.2.0"></script>
+<script src="js/ui/main.js?v=0.2.0"></script>
 </body></html>

@@ -1,5 +1,5 @@
 'use strict';
-/* イセログ 画面まわり（タイトル・準備・戦闘・報酬）。v0.1.0 はソロ＝自分がホストの世界として動かす */
+/* イセログ 画面まわり（タイトル・準備・フィールド・戦闘・報酬・帰還）。ソロ＝自分がホストの世界として動かす */
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -26,16 +26,22 @@ function onState(){if(!G)return render();const now=performance.now();if(G.evn<ui
   else if(e.k==='move'){BV.path('p'+e.p,e.path);sfx('step')}else if(e.k==='emove'){BV.path('e'+e.e,e.path);sfx('step')}
   else if(e.k==='eact'){BV.actE=e.e;BV.actT=now}
   else if(e.k==='start'){BV.reset();ui.mode=null;ui.sel=null}
+  else if(e.k==='fstart')FV.reset();else if(e.k==='enc')ui.ov=null;
+  else if(e.k==='gather'){toast(MAT[e.m].em+MAT[e.m].n+' ×'+e.n+' を手に入れた');sfx('heal')}
+  else if(e.k==='drop')toast('戦利品：'+matList(e.o));else if(e.k==='ret')sfx('win');
   else if(e.k==='turn'){if(G.cb){ui.banner=G.cb.turn===1?(G.cb.kind==='b'?'ボス戦！':'戦闘開始！'):'ターン '+G.cb.turn;sfx('turn')}}
   else if(e.k==='win'){ui.banner='勝利！';sfx('win')}else if(e.k==='lose')sfx('lose');
   else if(e.k==='die')sfx('die');else if(e.k==='down'||e.k==='out')sfx('down');else if(e.k==='card')sfx('card');else if(e.k==='blk')sfx('block');else if(e.k==='buff')sfx('buff');else if(e.k==='deb')sfx('deb')}
  if(ui.ph!==G.phase){ui.ph=G.phase;ui.pick=null;ui.mode=null;ui.sel=null}
- let p=me();
+ LS.set('iserogu_world',G.world);let p=me();
  if(G.phase==='combat'){if(G.cb.ph==='p'&&(p.ended||p.down)){const q=G.players.find(x=>!x.ended&&!x.down&&!x.out);if(q){ui.pid=q.id;ui.sel=null;ui.mode=null;p=q}}
   if(!p.hand.some(c=>c.u===ui.sel))ui.sel=null;if(G.cb.ph!=='p'||p.ended){if(ui.mode!=='look')ui.mode=null}if(ui.mode==='move'&&p.moved)ui.mode=null;if(ui.mode==='target'&&!ui.sel)ui.mode=null}
  else if(G.phase==='reward'&&p.done){const q=G.players.find(x=>!x.done);if(q)ui.pid=q.id}
  render()}
 /* ================= マスの操作 ================= */
+function fieldOn(){return !!(G&&scr==='game'&&G.phase==='field'&&!ui.ov)}
+function matList(o){const ks=Object.keys(o||{}).filter(m=>o[m]>0);return ks.length?ks.map(m=>MAT[m].em+MAT[m].n+'×'+o[m]).join('　'):'なし'}
+function bagCount(){let n=0;if(G&&G.fd)for(const m in G.fd.bag)n+=G.fd.bag[m];return n}
 function gridOn(){return !!(G&&scr==='game'&&G.phase==='combat'&&!ui.ov&&ui.mode)}
 function gridDir(dx,dy){if(ui.mode==='face'){sendAct({t:'face',f:dx>0?1:dx<0?3:dy>0?2:0});ui.mode=null;return}const N=CFG.grid;ui.cur={x:Math.max(0,Math.min(N-1,ui.cur.x+dx)),y:Math.max(0,Math.min(N-1,ui.cur.y+dy))};sfx('sel')}
 function tryPlay(u,tg){if(!sendAct({t:'play',u,tg})){ui.sel=null;ui.mode=null}}
@@ -64,22 +70,25 @@ const partyH=()=>`<div class="party">${G.players.map(chipH).join('')}</div>`;
 function render(){const app=$('#app'),sc={};$$('[data-sc]').forEach(e=>sc[e.dataset.sc]=[e.scrollLeft,e.scrollTop]);let h='';
  if(scr!=='game'||!G)h=vTitle();
  else if(G.phase==='prep')h=vPrep();
- else{const cb=G.cb;h=`<div class="top"><b>${ERAS[0].n}</b><span>戦闘 ${G.stage+1}/${CFG.stages.length}</span>${cb?`<span>${FIELDS[cb.field].n}・ターン${cb.turn}</span>`:''}<span class="sp"></span>${btn('ovDeck','🃏',{c:'sm'})}${btn('ovMenu','☰',{c:'sm'})}</div><div class="main">`+({combat:vCombat,reward:vReward,over:vOver,win:vWin}[G.phase]||(()=>''))()+'</div>'}
+ else{const cb=G.cb;h=`<div class="top"><b>${ERAS[0].n}</b>${cb?`<span>${FIELDS[cb.field].n}・ターン${cb.turn}</span>`:G.phase==='field'?`<span id="reg">${FIELDS[WORLD.reg[Math.floor(G.fd.y)][Math.floor(G.fd.x)]?'forest':'grass'].n}</span><span>❤️${me().hp}/${maxHp(me())}</span>`:''}<span class="sp"></span>${btn('ovDeck','🃏',{c:'sm'})}${btn('ovMenu','☰',{c:'sm'})}</div><div class="main">`+({field:vField,combat:vCombat,reward:vReward,over:vOver,home:vHome}[G.phase]||(()=>''))()+'</div>'}
  if(ui.banner){h+=`<div class="banner">${ui.banner}</div>`;ui.banner=''}
  app.innerHTML=h;const ov=$('#ov'),oh=vOverlay();ov.innerHTML=oh;ov.className=oh?'show':'';
  $$('[data-sc]').forEach(e=>{const s=sc[e.dataset.sc];if(s){e.scrollLeft=s[0];e.scrollTop=s[1]}});
  $$('.f').forEach(e=>{if(!e.dataset.k)e.dataset.k=(e.dataset.a||'x')+':'+(e.dataset.i||'')});
- document.body.classList.toggle('grid',gridOn());BV.attach();restoreFocus();music()}
+ document.body.classList.toggle('grid',gridOn());BV.attach();FV.attach();FV.full();restoreFocus();music()}
 function vTitle(){return `<div class="title"><div class="ver">v${VERSION} ${btn('reload','更新',{c:'sm'})}</div>
- <div class="icons">🪨🔱🏹🛖🔬✨</div><div class="logo">イセログ</div><div class="sub">〜異世界文明開拓〜<br>v${VERSION}：戦闘の試作版（ソロ・先史時代）</div>
+ <div class="icons">🪨🔱🏹🛖🔬✨</div><div class="logo">イセログ</div><div class="sub">〜異世界文明開拓〜<br>v${VERSION}：探索の試作版（ソロ・先史時代・草原と森林）</div>
  <div class="menu"><input class="nm" id="nm" maxlength="10" value="${esc(META.name)}" placeholder="なまえ">
- ${btn('play','戦闘をはじめる',{c:'pri'})}${btn('ovHelp','遊び方')}
+ ${btn('play','冒険をはじめる',{c:'pri'})}${btn('ovHelp','遊び方')}
  <div class="row">${btn('tBgm','♪ BGM '+(META.bgm?'ON':'OFF'),{c:'sm'})}${btn('tSe','🔊 効果音 '+(META.se?'ON':'OFF'),{c:'sm'})}</div></div></div>`}
 function vPrep(){const p=me(),ch=CH[p.ch],w=EQ[p.w];return `<div class="top"><b>出発の準備</b><span class="sp"></span>${btn('ovHelp','？',{c:'sm'})}${btn('leave','もどる',{c:'sm',b:1})}</div>
  <div class="pane scroll" data-sc="prep">${partyH()}<div class="row">${G.players.length<2?btn('addp','＋ 仲間を連れていく（2人を1人で操作）',{c:'sm'}):btn('rmp','－ 仲間を外す',{c:'sm'})}</div>
  <div class="box col"><div class="hd">キャラクター${G.players.length>1?'（'+esc(p.name)+'）':''}</div><div class="chs">${CHARS.map(c=>`<button class="btn f chb ${p.ch===c.id?'on':''}" data-a="char" data-i="${c.id}"><div class="pe">${c.em}</div>${c.n}<div class="small">HP${c.hp}・体勢${c.ps}</div></button>`).join('')}</div><div class="small" style="text-align:center">${ch.d}<br>初期カード：${countNames(ch.extra)}</div></div>
  <div class="box col"><div class="hd">最初の武器</div><div class="chs">${CFG.startWeapons.map(id=>`<button class="btn f chb ${p.w===id?'on':''}" data-a="weapon" data-i="${id}"><div class="pe">${EQ[id].em}</div>${EQ[id].n}</button>`).join('')}</div><div class="small" style="text-align:center">${wInfo(w)}</div></div>
- <div class="row">${btn('start','戦闘へ出発（全'+CFG.stages.length+'戦）',{c:'pri',y:1})}</div></div>`}
+ <div class="box small" style="text-align:center">倉庫：${matList(G.world.store)}</div>
+ <div class="row">${btn('start','冒険へ出発',{c:'pri',y:1})}</div></div>`}
+/* ---------- フィールド ---------- */
+function vField(){const n=fieldNear();return `<div class="cb"><canvas id="fv"></canvas><div class="cbt">${G.players.length>1?partyH():''}</div><div class="cbs"></div><div class="fctl">${btn('fAct',n?'✋ '+MAT[n.m].n+'を採集':'✋ 採集',{c:'pri '+(n?'':'dis')})}${btn('ovMap','🗺 地図',{c:'sm',y:1})}${btn('ovBag','🎒 荷物 '+bagCount(),{c:'sm'})}</div></div>`}
 /* ---------- 戦闘 ---------- */
 function unitInfo(u,p){if(u.side==='p')return `<b>${CH[u.ch].em}${esc(u.name)}</b>　HP${u.hp}/${maxHp(u)}・体勢${u.broken?'崩し':u.ps+'/'+u.mps}・向き${DIRN[u.f]}${u.down?'　💀戦闘不能（あと'+Math.max(0,CFG.rescueTurns-u.downT+1)+'ターンで強制帰還）':''}`;
  const d=EN[u.id],it=intentText(u,p),m=u.it&&d.moves[u.it.m];return `<b>${u.em}${u.n}</b>（${AIN[d.ai]}・移動${d.mv}・射程${d.rg}）　HP${u.hp}/${u.mhp}・体勢${u.broken?'崩し':u.ps+'/'+u.mps}・向き${DIRN[u.f]}<br>次の行動：${it?(m&&!u.broken?m[1]+' ':'')+it[0]:'—'}　<span style="color:#ffb060">■</span>攻撃が届く範囲`}
@@ -101,20 +110,22 @@ function vReward(){const p=me(),r=p.rw[0];let h;
  else if(r.k==='card')h=`<div class="box col"><div class="hd">カード報酬（1枚選ぶ）${G.players.length>1?'：'+esc(p.name):''}</div><div class="grid">${r.o.map((id,i)=>cardH(p,{id,up:0},{a:'rwSel',i,c:ui.pick===i?'sel':''})).join('')}</div><div class="row">${btn('rwTake','このカードを取る',{c:'pri '+(ui.pick==null?'dis':''),y:1})}${btn('rwSkip','見送る')}</div></div>`;
  else h=`<div class="box col"><div class="hd">${r.src}（武器を持ち替える）${G.players.length>1?'：'+esc(p.name):''}</div><div class="grid">${r.o.map((id,i)=>`<div class="eq f ${ui.pick===i?'sel':''}" data-a="rwSel" data-i="${i}"><div><span class="em">${EQ[id].em}</span><div class="en">${EQ[id].n}</div></div><div class="ed">${wInfo(EQ[id])}</div></div>`).join('')}</div><div class="small">今の武器：${EQ[p.w].em}${EQ[p.w].n}（持ち替えると武器のカードが入れ替わります）</div><div class="row">${btn('rwTake','これに持ち替える',{c:'pri '+(ui.pick==null?'dis':''),y:1})}${btn('rwSkip','今の武器のまま')}</div></div>`;
  return partyH()+`<div class="pane scroll" data-sc="rw"><div class="small">HPが${CFG.winHeal*100}%回復した。</div>${h}</div>`}
-function vOver(){return `<div class="pane"><div style="font-size:64px">🏠</div><div class="hd">拠点へ強制帰還…</div><div>${G.stage+1}戦目で力尽きた。</div>${btn('restart','もう一度（準備へ）',{c:'pri',y:1})}${btn('leave','タイトルへ')}</div>`}
-function vWin(){return `<div class="pane"><div style="font-size:64px">🎉🦣🎉</div><div class="hd">大マンモスを倒した！</div><div>v${VERSION} の戦闘はここまでです。</div>${btn('restart','もう一度（準備へ）',{c:'pri',y:1})}${btn('leave','タイトルへ')}</div>`}
+function vOver(){const fd=G.fd;return `<div class="pane"><div style="font-size:64px">🏠</div><div class="hd">拠点へ強制帰還…</div><div class="box col"><div>失った物（荷物の${CFG.loseBag*100}%）：${matList(fd.lost)}</div><div>持ち帰った物：${matList(fd.home)}</div><div class="small">歩数 ${fd.steps}・勝利 ${fd.wins}回</div></div>${btn('restart','出発の準備へ',{c:'pri',y:1})}${btn('leave','タイトルへ')}</div>`}
+function vHome(){const fd=G.fd;return `<div class="pane"><div style="font-size:64px">🛖</div><div class="hd">拠点に帰還した</div><div class="box col"><div>持ち帰った物：${matList(fd.home)}</div><div class="small">歩数 ${fd.steps}・勝利 ${fd.wins}回</div><div class="small">倉庫：${matList(G.world.store)}</div></div><div class="small">冒険中に組んだデッキは元に戻ります。</div>${btn('restart','出発の準備へ',{c:'pri',y:1})}${btn('leave','タイトルへ')}</div>`}
 /* ---------- オーバーレイ ---------- */
 function dlg(t,b){return `<div class="dlg"><div class="dh">${t}<span class="sp"></span>${btn('ovClose','✕',{c:'sm',b:1})}</div><div class="db scroll" data-sc="ov">${b}</div></div>`}
 function vOverlay(){const o=ui.ov,p=me();if(!o)return '';
- if(o.k==='help')return dlg('遊び方',`<div class="help"><b>■ 戦闘の流れ</b><br>8×8マスの戦場で戦います。自分のターンに「移動（1回・3歩ぶん）」と「カード（⚡${CFG.energy}・手札${CFG.handSize}枚）」を好きな順で使い、「ターン終了」で敵が動きます。<br><b>■ 行動予告</b><br>敵の頭上に次の行動が出ます。敵をタップすると、攻撃が届く範囲（オレンジ）が見られます。<br><b>■ 向き</b><br>側面から：HP×${CFG.dirHp.side}・体勢×${CFG.dirPs.side}／背後から：HP×${CFG.dirHp.back}・体勢×${CFG.dirPs.back}。地面の矢印が向きです。移動や攻撃で向きが変わり、「向き」でいつでも変えられます。仲間と敵をはさむと1段階有利になります。<br><b>■ 体勢値（黄色のバー）</b><br>0になると「体勢崩し」：次の行動を1回休み、受けるダメージ×${CFG.brokenDmg}。休んだら全回復します。棍棒は体勢を崩しやすく、弓や投石は崩しにくいです。<br><b>■ 地形</b><br>${Object.values(TER).map(t=>t.n+'：'+t.d).join('<br>')}<br><b>■ 戦闘不能と救助</b><br>HP0で戦闘不能。となりのマスの仲間が「救助」（⚡${CFG.rescueCost}）を選び、次のターン開始まで攻撃を受けなければ復帰します。${CFG.rescueTurns}ターン以内に救助されないか、全員が倒れると拠点へ強制帰還です（1人の時は戦闘不能＝強制帰還）。<br><b>■ 操作</b><br>タッチ・マウス：タップ／クリック<br>キーボード：矢印キーで移動、Enter/Zで決定、Esc/Xで戻る、Eでターン終了、Cでマスを調べる、Q/Wで対象・キャラ切り替え、Mでメニュー<br>コントローラー：十字キー/スティックで移動（戦場では上＝奥）、Aで決定、Bで戻る、Yでターン終了、Xでマスを調べる、LB/RBで対象・キャラ切り替え、STARTでメニュー</div>`);
- if(o.k==='menu')return dlg('メニュー',`<div class="menu">${btn('tBgm','♪ BGM '+(META.bgm?'ON':'OFF'))}${btn('tSe','🔊 効果音 '+(META.se?'ON':'OFF'))}${btn('ovHelp','遊び方')}${btn('reload','更新（再読み込み）')}${btn('leave','タイトルへ戻る')}</div><div class="small">v${VERSION}</div>`);
+ if(o.k==='help')return dlg('遊び方',`<div class="help"><b>■ 探索</b><br>フィールドを8方向に歩きます（画面をなぞる／方向キー・WASD／スティック）。光っている素材に近づいて「採集」。歩いていると敵に出会い、拠点から遠いほど敵が増えます。⚠️強敵と👑ボスは決まった場所にいます。右上の小さな地図と「地図」で歩いた所を確認できます。<br><b>■ 帰還</b><br>メニュー（☰）の「拠点へ帰還する」で、荷物を倉庫に持ち帰れます。全員が倒れると強制帰還になり、荷物の${CFG.loseBag*100}%を失います。<br><b>■ 戦闘の流れ</b><br>8×8マスの戦場で戦います。自分のターンに「移動（1回・3歩ぶん）」と「カード（⚡${CFG.energy}・手札${CFG.handSize}枚）」を好きな順で使い、「ターン終了」で敵が動きます。<br><b>■ 行動予告</b><br>敵の頭上に次の行動が出ます。敵をタップすると、攻撃が届く範囲（オレンジ）が見られます。<br><b>■ 向き</b><br>側面から：HP×${CFG.dirHp.side}・体勢×${CFG.dirPs.side}／背後から：HP×${CFG.dirHp.back}・体勢×${CFG.dirPs.back}。地面の矢印が向きです。移動や攻撃で向きが変わり、「向き」でいつでも変えられます。仲間と敵をはさむと1段階有利になります。<br><b>■ 体勢値（黄色のバー）</b><br>0になると「体勢崩し」：次の行動を1回休み、受けるダメージ×${CFG.brokenDmg}。休んだら全回復します。棍棒は体勢を崩しやすく、弓や投石は崩しにくいです。<br><b>■ 地形</b><br>${Object.values(TER).map(t=>t.n+'：'+t.d).join('<br>')}<br><b>■ 戦闘不能と救助</b><br>HP0で戦闘不能。となりのマスの仲間が「救助」（⚡${CFG.rescueCost}）を選び、次のターン開始まで攻撃を受けなければ復帰します。${CFG.rescueTurns}ターン以内に救助されないか、全員が倒れると拠点へ強制帰還です（1人の時は戦闘不能＝強制帰還）。<br><b>■ 操作</b><br>タッチ・マウス：タップ／クリック<br>キーボード：矢印キーで移動、Enter/Zで決定、Esc/Xで戻る、Eでターン終了、Cでマスを調べる、Q/Wで対象・キャラ切り替え、Mでメニュー<br>コントローラー：十字キー/スティックで移動（戦場では上＝奥）、Aで決定、Bで戻る、Yでターン終了、Xでマスを調べる、LB/RBで対象・キャラ切り替え、STARTでメニュー</div>`);
+ if(o.k==='map')return dlg('🗺 地図',`<canvas id="mapcv"></canvas><div class="small">🟡自分　⚪拠点　🔴強敵　🟣ボス　白い点＝採集ポイント<br>歩いた所のまわりが地図に書き込まれます。</div>`);
+ if(o.k==='bag')return dlg('🎒 荷物',`<div>${matList(G.fd&&G.fd.bag)}</div><div class="small">倉庫：${matList(G.world.store)}<br>荷物は拠点へ帰還すると倉庫に入ります。</div>`);
+ if(o.k==='menu')return dlg('メニュー',`<div class="menu">${G.phase==='field'?btn('ret','🏠 拠点へ帰還する',{c:'pri'}):''}${btn('tBgm','♪ BGM '+(META.bgm?'ON':'OFF'))}${btn('tSe','🔊 効果音 '+(META.se?'ON':'OFF'))}${btn('ovHelp','遊び方')}${btn('reload','更新（再読み込み）')}${btn('leave','タイトルへ戻る')}</div><div class="small">v${VERSION}</div>`);
  if(o.k==='deck'&&p){const d=p.deck.slice().sort((a,b)=>(a.src?0:1)-(b.src?0:1)||a.id.localeCompare(b.id));return dlg('🃏 デッキ（'+p.deck.length+'枚）：'+esc(p.name),`<div class="small">${EQ[p.w].em}${EQ[p.w].n}：${wInfo(EQ[p.w])}</div><div class="grid">${d.map(c=>cardH(p,c,{k:'dk'+c.u})).join('')}</div>`)}
  return ''}
 /* ================= 操作 ================= */
 const ACT={
- reload(){location.reload()},play(){saveName();newGame();addPlayer(MY,META.name);ui.pid=MY;ui.lastEv=0;scr='game'},leave(){G=null;scr='title';ui.ov=null;ui.mode=null;ui.sel=null},
+ reload(){location.reload()},play(){saveName();newGame(LS.get('iserogu_world',null));addPlayer(MY,META.name);ui.pid=MY;ui.lastEv=0;scr='game'},leave(){G=null;scr='title';ui.ov=null;ui.mode=null;ui.sel=null},
  tBgm(){META.bgm=META.bgm?0:1;saveMeta()},tSe(){META.se=META.se?0:1;saveMeta()},
- ovHelp(){ui.ov={k:'help'}},ovMenu(){ui.ov={k:'menu'}},ovDeck(){ui.ov={k:'deck'}},ovClose(){ui.ov=null},
+ ovHelp(){ui.ov={k:'help'}},ovMenu(){ui.ov={k:'menu'}},ovDeck(){ui.ov={k:'deck'}},ovMap(){ui.ov={k:'map'}},ovBag(){ui.ov={k:'bag'}},fAct(){sendAct({t:'gather'})},ret(){ui.ov=null;sendAct({t:'return'})},ovClose(){ui.ov=null},
  addp(){const q=addPlayer(MY+'_2','仲間');if(q)ui.pid=q.id},rmp(){removePlayer(MY+'_2');ui.pid=MY},
  char(i){sendAct({t:'char',c:i})},weapon(i){sendAct({t:'weapon',w:i})},start(){sendAct({t:'start'})},restart(){sendAct({t:'restart'});ui.pid=MY},
  chip(i){const q=byId(i);if(!q)return;if(G.phase==='combat'&&(q.down||q.out)){ui.cur={x:q.x,y:q.y};ui.mode='look';return}ui.pid=i;ui.sel=null;ui.mode=null;ui.pick=null},
@@ -132,7 +143,7 @@ const ACT={
 };
 function saveName(){const e=$('#nm');if(e){META.name=(e.value.trim()||META.name).slice(0,10);saveMeta()}}
 function doClick(el){const a=el.closest('[data-a]');if(!a)return;auInit();if(a.classList.contains('dis'))return sfx('no');const f=ACT[a.dataset.a];if(!f)return;if(a.classList.contains('f')){ui.fk=a.dataset.k;ui.fr=a.getBoundingClientRect()}if(!/^(card|rwSel|chip)$/.test(a.dataset.a))sfx('click');f(a.dataset.i,a);render()}
-document.addEventListener('click',e=>{if(e.target.id==='nm'||e.target.id==='cv')return;doClick(e.target)});
+document.addEventListener('click',e=>{if(e.target.id==='nm'||e.target.id==='cv'||e.target.id==='fv')return;doClick(e.target)});
 document.addEventListener('pointerdown',e=>{if(e.pointerType)setMode(false);auInit()});
 document.addEventListener('change',e=>{if(e.target.id==='nm')saveName()});
 window.addEventListener('resize',()=>{if(scr==='game')render()});

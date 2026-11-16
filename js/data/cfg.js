@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.1.0';
+const VERSION='0.2.0';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -18,8 +18,18 @@ const CFG={
  eliteWeapons:['obsidian_knife','stone_axe','hunt_bow','atlatl'],
  bossWeapons:['mammoth_spear','b_tusk'],
  mobs:['hyena','wolf','boar','snake','monkey'],
- // v0.1.0 の連戦（探索ができるまでの仮の進行）
- stages:[{k:'n',en:['hyena','wolf'],field:'grass'},{k:'n',en:['boar','monkey','snake'],field:'forest'},{k:'e',en:['saber'],field:'forest'},{k:'n',en:['wolf','boar','monkey'],field:'grass'},{k:'b',en:['mammoth'],field:'grass'}]
+ // ---- 探索（v0.2.0） ----
+ worldN:64,        // フィールドの広さ（マス）
+ walkSpeed:4.2,    // 歩く速さ（マス／秒）
+ sight:7,          // 地図に書き込まれる範囲（マス）
+ encOn:true,       // ランダムエンカウントのスイッチ
+ encBase:.03,encStep:.006,   // 遭遇率：基本＋1歩ごとの上乗せ（遭遇で元に戻る）
+ encGrace:5,       // 出発直後・戦闘直後に敵が出ない歩数
+ safeR:4,          // 拠点のまわりで敵が出ない範囲（マス）
+ encFar:[9,18],    // 拠点からこの距離を超えると敵が1体ずつ増える
+ eliteDist:14,eliteRate:.07, // 遠くでは通常の遭遇がまれに強敵になる
+ nodeRate:.045,gatherN:[1,3],// 採集ポイントの多さ／1回で採れる数
+ loseBag:.3        // 強制帰還で失う荷物の割合
 };
 // 武器種ごとの性質（射程・体勢ダメージ倍率）。レアリティや時代では変わらない
 const WPN={spear:{rg:2,pm:1},club:{rg:1,pm:1.5},sling:{rg:4,pm:.5},staff:{rg:1,pm:.8},knife:{rg:1,pm:.5},axe:{rg:1,pm:.7},bow:{rg:5,pm:.4},none:{rg:1,pm:.6}};
