@@ -50,4 +50,4 @@ const BV={v:View.create(),an:{},fl:[],actE:-1,actT:0,last:0,
 // 敵の行動予告：[文字, 色]
 function intentText(e,p){if(e.hp<=0)return null;if(e.broken)return ['💫体勢崩し','#ffe060'];if(e.st.stun>0)return ['💫気絶','#ffe060'];if(!e.it)return null;const m=EN[e.id].moves[e.it.m],k=m[0],t=e.it.t?byId(e.it.t):null,mine=t&&p&&t.id===p.id,h=m[3]>1?'×'+m[3]:'',tn=t&&G.players.length>1?'→'+t.name.slice(0,3):'';
  return k==='a'?['⚔️'+eDmg(e,m)+h+tn,mine||G.players.length===1?'#ff8a70':'#ffd0c0']:k==='A'?['💥'+eDmg(e,m)+h+'範囲','#ff8a70']:k==='d'?['🛡️防御','#a8d0ff']:k==='u'?['💪強化','#ffd870']:k==='x'?['🌀妨害'+tn,'#d8a8ff']:['⏳準備','#ddd']}
-(function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-BV.last)/1000||0);BV.last=t;if(typeof G!=='undefined'&&G&&G.cb){BV.tick(dt);BV.draw()}})(0);
+(function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-BV.last)/1000||0);BV.last=t;if(typeof G!=='undefined'&&G&&G.cb){BV.tick(dt*(typeof spd==='function'?spd():1));BV.draw()}})(0);

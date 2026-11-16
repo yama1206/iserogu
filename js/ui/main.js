@@ -3,7 +3,7 @@
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let META=Object.assign({name:'',pid:'',bgm:1,se:1,auto:0},LS.get('iserogu_meta',{}));
+let META=Object.assign({name:'',pid:'',bgm:1,se:1,auto:0,spd:1},LS.get('iserogu_meta',{}));
 if(!META.pid)META.pid='u'+Math.random().toString(36).slice(2,10);if(!META.name)META.name='旅人'+rng(100,999);
 const MY=META.pid,saveMeta=()=>LS.set('iserogu_meta',META);saveMeta();
 let scr='title',syncT=0;
@@ -12,6 +12,8 @@ const ui={pid:MY,sel:null,mode:null,cur:{x:1,y:3},tab:'go',ov:null,pick:null,las
 const me=()=>G&&(byId(ui.pid)||G.players[0]);
 function toast(m){const d=document.createElement('div');d.className='ts';d.textContent=m;$('#toast').appendChild(d);setTimeout(()=>d.remove(),3300)}
 function sendAct(a,pid){auInit();const er=act(pid||me().id,a);if(er)toast(er);return er}
+const spd=()=>[1,2,4].includes(META.spd)?META.spd:1;
+HOOK.sched=(f,ms)=>setTimeout(f,ms/spd()); // 戦闘の速さ（×1・×2・×4）
 HOOK.changed=()=>{if(syncT)return;syncT=setTimeout(()=>{syncT=0;onState()},0)};
 /* ---------- 状態が変わったとき ---------- */
 function onState(){if(!G)return render();const now=performance.now();if(G.evn<ui.lastEv)ui.lastEv=0;
@@ -99,7 +101,7 @@ function vCombat(){const cb=G.cb,p=me();if(!p)return '';const my=cb.ph==='p'&&!p
  return `<div class="cb"><canvas id="cv"></canvas><div class="cbt">${G.players.length>1?partyH():''}</div><div class="cbs"></div><div class="cbb"><div class="logl">${G.log.slice(-2).map(esc).join('<br>')}</div><div class="detail">${detailH(p,my)}</div>
  <div class="hand" id="hand" data-sc="hand">${p.hand.map(c=>cardH(p,c,{a:'card',i:c.u,c:(ui.sel===c.u?'sel ':'')+(costOf(c)>p.en?'noen':'')})).join('')||`<div class="small">${p.down?'':'手札なし'}</div>`}</div>
  <div class="ctl"><div class="orb">⚡${p.en}</div><div class="small st2">HP${p.hp}/${maxHp(p)}<br>体勢${p.broken?'崩し':p.ps+'/'+p.mps}</div><div class="small">山${p.draw.length}<br>捨${p.disc.length}</div><span style="flex:1"></span>
- ${cb.skip&&cb.turn===1&&cb.ph==='p'?btn('skip','⏩スキップ',{c:'sm on'}):''}${btn('auto','🤖オート',{c:'sm '+(META.auto?'on':'')})}${btn('move','👟移動',{c:'sm '+(ui.mode==='move'?'on ':'')+(my&&!p.moved?'':'dis')})}${btn('face','🧭向き',{c:'sm '+(ui.mode==='face'?'on ':'')+(my?'':'dis')})}${btn('look','🔍',{c:'sm '+(ui.mode==='look'?'on':'')})}${dn&&p.resc==null?btn('rescue','🆘救助⚡'+CFG.rescueCost,{c:'sm on'}):''}${btn('end',p.ended?'終了済み':'ターン終了',{c:'pri sm '+(my?'':'dis'),y:1})}</div></div></div>`}
+ ${cb.skip&&cb.turn===1&&cb.ph==='p'?btn('skip','⏩スキップ',{c:'sm on'}):''}${btn('spd','⏱×'+spd(),{c:'sm '+(spd()>1?'on':'')})}${btn('auto','🤖オート',{c:'sm '+(META.auto?'on':'')})}${btn('move','👟移動',{c:'sm '+(ui.mode==='move'?'on ':'')+(my&&!p.moved?'':'dis')})}${btn('face','🧭向き',{c:'sm '+(ui.mode==='face'?'on ':'')+(my?'':'dis')})}${btn('look','🔍',{c:'sm '+(ui.mode==='look'?'on':'')})}${dn&&p.resc==null?btn('rescue','🆘救助⚡'+CFG.rescueCost,{c:'sm on'}):''}${btn('end',p.ended?'終了済み':'ターン終了',{c:'pri sm '+(my?'':'dis'),y:1})}</div></div></div>`}
 /* ---------- 報酬・結果 ---------- */
 function vReward(){const p=me(),r=p.rw[0];let h;
  if(!r)h='<div class="wait">次の戦闘へ…</div>';
@@ -134,7 +136,7 @@ const ACT={
  face(){const p=me();ui.sel=null;if(ui.mode==='face'){ui.mode=null;return}ui.mode='face';ui.cur={x:p.x,y:p.y}},
  look(){const p=me();ui.sel=null;if(ui.mode==='look'){ui.mode=null;return}ui.mode='look';if(!unitAt(ui.cur.x,ui.cur.y))ui.cur={x:p.x,y:p.y}},
  rescue(){const p=me(),t=G.players.find(q=>q.down&&!q.out&&dist(p,q)===1);if(t)sendAct({t:'rescue',p:t.id})},
- auto(){META.auto=META.auto?0:1;saveMeta();ui.mode=null;ui.sel=null},skip(){sendAct({t:'skip'})},
+ spd(){META.spd=spd()===1?2:spd()===2?4:1;saveMeta()},auto(){META.auto=META.auto?0:1;saveMeta();ui.mode=null;ui.sel=null},skip(){sendAct({t:'skip'})},
  end(){const p=me();ui.mode=null;ui.sel=null;if(p&&!p.ended)sendAct({t:'end'})},
  rwSel(i){ui.pick=+i;sfx('sel')},rwSkip(){sendAct({t:'pick',i:-1});ui.pick=null},rwTake(){if(ui.pick==null)return;sendAct({t:'pick',i:ui.pick});ui.pick=null},
 };
@@ -144,7 +146,7 @@ document.addEventListener('click',e=>{if(e.target.id==='nm'||e.target.id==='cv'|
 document.addEventListener('pointerdown',e=>{if(e.pointerType)setMode(false);auInit()});
 document.addEventListener('change',e=>{if(e.target.id==='nm')saveName()});
 // オートバトル：味方のターンの間、順番に1つずつ行動させる
-setInterval(()=>{if(!G||scr!=='game'||G.phase!=='combat'||!META.auto||ui.ov||G.cb.ph!=='p')return;const q=G.players.find(x=>!x.ended&&!x.down&&!x.out);if(!q)return;ui.pid=q.id;const a=autoAct(q);if(!a||act(q.id,a))act(q.id,{t:'end'})},CFG.autoStep);
+(function autoLoop(){setTimeout(autoLoop,CFG.autoStep/spd());if(!G||scr!=='game'||G.phase!=='combat'||!META.auto||ui.ov||G.cb.ph!=='p')return;const q=G.players.find(x=>!x.ended&&!x.down&&!x.out);if(!q)return;ui.pid=q.id;const a=autoAct(q);if(!a||act(q.id,a))act(q.id,{t:'end'})})();
 // 時間：世界を開いている間、1秒ごとに進める（ゲーム内1時間ごとに住民の仕事を計算）
 setInterval(()=>{if(!G||scr!=='game')return;if(baseTick(1)){if(G.phase==='prep'&&!ui.ov)onState();else LS.set('iserogu_world',G.world)}},1000);
 window.addEventListener('resize',()=>{if(scr==='game')render()});
