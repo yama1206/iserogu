@@ -1,6 +1,6 @@
 'use strict';
 /* イセログ：調整用の数値はすべてここ（data/cfg） */
-const VERSION='0.2.0';
+const VERSION='0.2.1';
 const CFG={
  grid:8,handSize:5,energy:3,handMax:10,maxPlayers:4,moveMp:3,
  // 向き：攻撃する面ごとの倍率（HPダメージ／体勢ダメージ）
@@ -14,6 +14,8 @@ const CFG={
  rescueCost:2,rescuePct:.3,rescueTurns:3,afterDownPct:.25,winHeal:.2,
  hpMul:[1,1.4,1.7,2],eliteHpMul:[1,2,3,4],bossHpMul:[1,2.9,5.6,8],dmgMul:[1,1.25,1.5,1.7],bossDmgMul:[1,1.6,2.3,2.8],bossHp:.8,bossDmg:.85,
  enemyStep:800,
+ autoStep:450,     // オートバトルで1つの行動にかける時間（ミリ秒）
+ skipTurns:3,skipHp:.2,skipHit:.7,skipDmg:.5, // バトルスキップ：倒すまで3ターン以内・受けるダメージが今のHPの20%以内の時だけ（skipHit＝攻撃に使える割合、skipDmg＝受けるダメージの見積もり）
  startWeapons:['stone_spear','wood_club','sling','bone_staff'],
  eliteWeapons:['obsidian_knife','stone_axe','hunt_bow','atlatl'],
  bossWeapons:['mammoth_spear','b_tusk'],

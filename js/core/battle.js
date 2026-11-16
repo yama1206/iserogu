@@ -49,9 +49,9 @@ function faceRel(ax,ay,t,att){const dx=ax-t.x,dy=ay-t.y,c=[];if(Math.abs(dx)>=Ma
 function faceTo(u,t){const dx=t.x-u.x,dy=t.y-u.y;if(!dx&&!dy)return;u.f=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0)}
 function genMap(field){const F=FIELDS[field]||FIELDS.grass,N=CFG.grid;
  for(let tr=0;tr<40;tr++){const m=[];for(let y=0;y<N;y++)m.push(Array(N).fill('p'));
-  const put=(k,ok)=>{const n=rng(F[k][0],F[k][1]);for(let i=0,t=0;i<n&&t<300;t++){const x=R(N),y=R(N);if(m[y][x]!=='p'||!ok(y))continue;m[y][x]=k;i++}};
-  put('f',()=>true);put('w',y=>y>0&&y<N-1);put('h',()=>true);put('r',y=>y>=2&&y<=N-3);
-  let cnt=0,tot=0;const seen={},q=[[3,N-1]];seen['3,'+(N-1)]=1;m.forEach(r=>r.forEach(c=>{if(c!=='r')tot++}));
+  const put=(k,ok)=>{const n=rng(F[k][0],F[k][1]);for(let i=0,t=0;i<n&&t<300;t++){const x=R(N),y=R(N);if(m[y][x]!=='p'||!ok(x))continue;m[y][x]=k;i++}};
+  put('f',()=>true);put('w',x=>x>0&&x<N-1);put('h',()=>true);put('r',x=>x>=2&&x<=N-3);
+  let cnt=0,tot=0;const seen={},q=[[0,3]];seen['0,3']=1;m.forEach(r=>r.forEach(c=>{if(c!=='r')tot++}));
   while(q.length){const [x,y]=q.pop();cnt++;for(const d of DIR){const a=x+d[0],b=y+d[1];if(a<0||b<0||a>=N||b>=N||m[b][a]==='r'||seen[a+','+b])continue;seen[a+','+b]=1;q.push([a,b])}}
   if(cnt===tot)return m}
  const m=[];for(let y=0;y<N;y++)m.push(Array(N).fill('p'));return m}
@@ -84,15 +84,15 @@ function rollCards(p,n){const pool=[];Object.values(CARDS).forEach(c=>{if(!c.rw)
 /* ================= 戦闘 ================= */
 function startRun(){G.log=[];G.players.forEach(setChar);fieldStart()}
 function spawn(id,kind){const d=EN[id],n=Math.min(4,G.players.length),hm=(kind==='b'?CFG.bossHp:1)*(kind==='b'?CFG.bossHpMul:kind==='e'?CFG.eliteHpMul:CFG.hpMul)[n-1],hp=Math.round(d.hp*hm),ps=Math.round(d.ps*hm);
- return {id,side:'e',n:d.n,em:d.em,hp,mhp:hp,ps,mps:ps,blk:0,st:{},mi:R(d.seq.length),it:null,x:0,y:0,f:2,broken:false,aggro:false,hitBy:[],boss:kind==='b',dm:(kind==='b'||kind==='e'?CFG.bossDmgMul:CFG.dmgMul)[n-1]*(kind==='b'?CFG.bossDmg:1)}}
+ return {id,side:'e',n:d.n,em:d.em,hp,mhp:hp,ps,mps:ps,blk:0,st:{},mi:R(d.seq.length),it:null,x:0,y:0,f:3,broken:false,aggro:false,hitBy:[],boss:kind==='b',dm:(kind==='b'||kind==='e'?CFG.bossDmgMul:CFG.dmgMul)[n-1]*(kind==='b'?CFG.bossDmg:1)}}
 // st={k:n通常/e強敵/bボス, en:[敵ID], field:地域, fix:決まった場所の敵の番号}
 function startCombat(st){const n=Math.min(4,G.players.length),N=CFG.grid,map=genMap(st.field),en=[];
  G.phase='combat';G.cb={kind:st.k,field:st.field,fix:st.fix,map,en,turn:0,ph:'p',ei:0};
- const sp=[[3,N-1],[4,N-1],[2,N-1],[5,N-1]];
- G.players.forEach((p,i)=>{p.x=sp[i][0];p.y=sp[i][1];p.f=0;p.draw=shuf(p.deck.map(c=>Object.assign({},c)));p.hand=[];p.disc=[];p.exh=[];p.st={};p.blk=0;p.ps=p.mps;p.broken=false;p.out=false;p.downT=0;p.resc=null;p.done=false;if(p.hp<=0){p.hp=0;p.down=true}else p.down=false});
+ const sp=[[0,3],[0,4],[0,2],[0,5]];   // 味方は左、敵は右に並ぶ
+ G.players.forEach((p,i)=>{p.x=sp[i][0];p.y=sp[i][1];p.f=1;p.draw=shuf(p.deck.map(c=>Object.assign({},c)));p.hand=[];p.disc=[];p.exh=[];p.st={};p.blk=0;p.ps=p.mps;p.broken=false;p.out=false;p.downT=0;p.resc=null;p.done=false;if(p.hp<=0){p.hp=0;p.down=true}else p.down=false});
  const ids=st.en.slice();for(let i=1;i<n;i++)ids.push(pick(CFG.mobs));
- ids.forEach((id,i)=>{const e=spawn(id,i===0?st.k:'n'),c=[];for(let y=0;y<=2;y++)for(let x=0;x<N;x++)if(!TER[map[y][x]].block&&!unitAt(x,y)&&(!e.boss||(y<=1&&x>=2&&x<=5)))c.push([x,y]);const s=pick(c);e.x=s[0];e.y=s[1];en.push(e)});
- log(st.k==='b'?'ボス「'+en[0].n+'」が現れた！':st.k==='e'?'強敵が現れた！':'敵が現れた！');ev('start');startPlayerPhase()}
+ ids.forEach((id,i)=>{const e=spawn(id,i===0?st.k:'n'),c=[];for(let y=0;y<N;y++)for(let x=N-3;x<N;x++)if(!TER[map[y][x]].block&&!unitAt(x,y)&&(!e.boss||(x>=N-2&&y>=2&&y<=5)))c.push([x,y]);const s=pick(c);e.x=s[0];e.y=s[1];en.push(e)});
+ G.cb.skip=skipEst();log(st.k==='b'?'ボス「'+en[0].n+'」が現れた！':st.k==='e'?'強敵が現れた！':'敵が現れた！');ev('start');startPlayerPhase()}
 function nearestP(e){const ps=alivePs();if(!ps.length)return null;const m=Math.min(...ps.map(p=>dist(e,p)));return pick(ps.filter(p=>dist(e,p)===m))}
 function pickTarget(e){const d=EN[e.id],ps=alivePs();if(!ps.length)return null;let c=ps;
  if(d.tgt==='weak'){const m=Math.min(...ps.map(p=>p.hp));c=ps.filter(p=>p.hp===m)}
@@ -183,6 +183,13 @@ function enemyAct(e){const d=EN[e.id],ix=G.cb.en.indexOf(e);e.blk=0;
  if(e.st.weak>0)e.st.weak--;
  if(e.hp>0&&!e.broken&&terAt(e.x,e.y)!=='w')e.ps=Math.min(e.mps,e.ps+Math.ceil(e.mps*CFG.psRegen))}
 function endEnemyPhase(){G.cb.en.forEach(e=>{if(e.st.vuln>0)e.st.vuln--});G.players.forEach(p=>{if(p.down||p.out)return;if(p.st.bleed>0){ev('phit',{p:p.id,d:p.st.bleed,b:0});const b=p.st.bleed;p.st.bleed--;hurtP(p,b)}if(p.st.vuln>0)p.st.vuln--});if(!checkCombatEnd())startPlayerPhase()}
+// バトルスキップ：通常の敵で、戦力差が大きい時だけ（倒すまでのターン数と受けるダメージの見積もり）
+function skipEst(){const cb=G.cb,ps=G.players.filter(p=>p.hp>0);if(cb.kind!=='n'||!ps.length)return null;let dpt=0,ehp=0,edmg=0;
+ ps.forEach(p=>{let s=0,n=0;p.deck.forEach(c=>{const d=CARDS[c.id];if(!usable(p,c))return;let v=0;d.fx.forEach(f=>{if(f[0]==='d')v+=dmgOf(p,c,f)*(f[3]||1)});if(v){s+=v/Math.max(1,d.cost);n++}});if(n)dpt+=s/n*CFG.energy*CFG.skipHit});
+ cb.en.forEach(e=>{const d=EN[e.id];ehp+=e.hp;let s=0;d.seq.forEach(i=>{const m=d.moves[i];if('aA'.includes(m[0]))s+=m[2]*(m[3]||1)*e.dm});edmg+=s/d.seq.length});
+ const turns=Math.ceil(ehp/Math.max(1,dpt)),take=Math.round(edmg*turns*CFG.skipDmg),hp=ps.reduce((a,p)=>a+p.hp,0);return turns<=CFG.skipTurns&&take<=hp*CFG.skipHp?{turns,take}:null}
+function skipCombat(){const cb=G.cb;if(G.phase!=='combat'||cb.ph!=='p'||!cb.skip||cb.turn!==1)return '今はスキップできません';const ps=alivePs(),d=Math.ceil(cb.skip.take/ps.length);
+ ps.forEach(p=>{p.hp=Math.max(1,p.hp-d)});cb.en.forEach(e=>{e.hp=0});log('戦闘をスキップした（'+cb.skip.take+'ダメージを受けた）。');winCombat();return ''}
 function winCombat(){const cb=G.cb,st={k:cb.kind},fd=G.fd,got={};ev('win');
  G.players.forEach(p=>{if(p.down||p.out){p.down=false;p.out=false;p.hp=Math.max(1,Math.ceil(maxHp(p)*CFG.afterDownPct))}else p.hp=Math.min(maxHp(p),p.hp+Math.ceil(maxHp(p)*CFG.winHeal));
   p.st={};p.blk=0;p.broken=false;p.ps=p.mps;p.resc=null;p.hand=[];p.draw=[];p.disc=[];p.exh=[];p.done=false;p.rw=[];
@@ -204,6 +211,7 @@ function act(pid,a){const p=byId(pid);if(!p)return '参加していません';le
   case 'play':er=playCard(p,a.u,a.tg);break;
   case 'end':er=endTurn(p);break;
   case 'rescue':er=rescue(p,a.p);break;
+  case 'skip':er=skipCombat();break;
   case 'pick':{const r=p.rw[0];if(!r||G.phase!=='reward')return '';if(a.i!=null&&a.i>=0){const id=r.o[a.i];if(!id)return '';if(r.k==='card')p.deck.push(cinst(id));else{setWeapon(p,id);log(p.name+'は「'+EQ[id].n+'」を手に入れた。')}}p.rw.shift();if(!p.rw.length)p.done=true;break}
   case 'gather':if(G.phase!=='field')return '';er=fieldGather();break;
   case 'return':er=fieldReturn();break;

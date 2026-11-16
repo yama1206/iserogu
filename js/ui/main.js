@@ -3,12 +3,12 @@
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let META=Object.assign({name:'',pid:'',bgm:1,se:1},LS.get('iserogu_meta',{}));
+let META=Object.assign({name:'',pid:'',bgm:1,se:1,auto:0},LS.get('iserogu_meta',{}));
 if(!META.pid)META.pid='u'+Math.random().toString(36).slice(2,10);if(!META.name)META.name='旅人'+rng(100,999);
 const MY=META.pid,saveMeta=()=>LS.set('iserogu_meta',META);saveMeta();
 let scr='title',syncT=0;
 // mode: null / move 移動先を選ぶ / face 向きを選ぶ / target 攻撃対象を選ぶ / look マスを調べる
-const ui={pid:MY,sel:null,mode:null,cur:{x:3,y:6},ov:null,pick:null,lastEv:0,banner:'',fk:null,fr:null,ph:''};
+const ui={pid:MY,sel:null,mode:null,cur:{x:1,y:3},ov:null,pick:null,lastEv:0,banner:'',fk:null,fr:null,ph:''};
 const me=()=>G&&(byId(ui.pid)||G.players[0]);
 function toast(m){const d=document.createElement('div');d.className='ts';d.textContent=m;$('#toast').appendChild(d);setTimeout(()=>d.remove(),3300)}
 function sendAct(a,pid){auInit();const er=act(pid||me().id,a);if(er)toast(er);return er}
@@ -103,7 +103,7 @@ function vCombat(){const cb=G.cb,p=me();if(!p)return '';const my=cb.ph==='p'&&!p
  return `<div class="cb"><canvas id="cv"></canvas><div class="cbt">${G.players.length>1?partyH():''}</div><div class="cbs"></div><div class="cbb"><div class="logl">${G.log.slice(-2).map(esc).join('<br>')}</div><div class="detail">${detailH(p,my)}</div>
  <div class="hand" id="hand" data-sc="hand">${p.hand.map(c=>cardH(p,c,{a:'card',i:c.u,c:(ui.sel===c.u?'sel ':'')+(costOf(c)>p.en?'noen':'')})).join('')||`<div class="small">${p.down?'':'手札なし'}</div>`}</div>
  <div class="ctl"><div class="orb">⚡${p.en}</div><div class="small st2">HP${p.hp}/${maxHp(p)}<br>体勢${p.broken?'崩し':p.ps+'/'+p.mps}</div><div class="small">山${p.draw.length}<br>捨${p.disc.length}</div><span style="flex:1"></span>
- ${btn('move','👟移動',{c:'sm '+(ui.mode==='move'?'on ':'')+(my&&!p.moved?'':'dis')})}${btn('face','🧭向き',{c:'sm '+(ui.mode==='face'?'on ':'')+(my?'':'dis')})}${btn('look','🔍',{c:'sm '+(ui.mode==='look'?'on':'')})}${dn&&p.resc==null?btn('rescue','🆘救助⚡'+CFG.rescueCost,{c:'sm on'}):''}${btn('end',p.ended?'終了済み':'ターン終了',{c:'pri sm '+(my?'':'dis'),y:1})}</div></div></div>`}
+ ${cb.skip&&cb.turn===1&&cb.ph==='p'?btn('skip','⏩スキップ',{c:'sm on'}):''}${btn('auto','🤖オート',{c:'sm '+(META.auto?'on':'')})}${btn('move','👟移動',{c:'sm '+(ui.mode==='move'?'on ':'')+(my&&!p.moved?'':'dis')})}${btn('face','🧭向き',{c:'sm '+(ui.mode==='face'?'on ':'')+(my?'':'dis')})}${btn('look','🔍',{c:'sm '+(ui.mode==='look'?'on':'')})}${dn&&p.resc==null?btn('rescue','🆘救助⚡'+CFG.rescueCost,{c:'sm on'}):''}${btn('end',p.ended?'終了済み':'ターン終了',{c:'pri sm '+(my?'':'dis'),y:1})}</div></div></div>`}
 /* ---------- 報酬・結果 ---------- */
 function vReward(){const p=me(),r=p.rw[0];let h;
  if(!r)h='<div class="wait">次の戦闘へ…</div>';
@@ -115,7 +115,7 @@ function vHome(){const fd=G.fd;return `<div class="pane"><div style="font-size:6
 /* ---------- オーバーレイ ---------- */
 function dlg(t,b){return `<div class="dlg"><div class="dh">${t}<span class="sp"></span>${btn('ovClose','✕',{c:'sm',b:1})}</div><div class="db scroll" data-sc="ov">${b}</div></div>`}
 function vOverlay(){const o=ui.ov,p=me();if(!o)return '';
- if(o.k==='help')return dlg('遊び方',`<div class="help"><b>■ 探索</b><br>フィールドを8方向に歩きます（画面をなぞる／方向キー・WASD／スティック）。光っている素材に近づいて「採集」。歩いていると敵に出会い、拠点から遠いほど敵が増えます。⚠️強敵と👑ボスは決まった場所にいます。右上の小さな地図と「地図」で歩いた所を確認できます。<br><b>■ 帰還</b><br>メニュー（☰）の「拠点へ帰還する」で、荷物を倉庫に持ち帰れます。全員が倒れると強制帰還になり、荷物の${CFG.loseBag*100}%を失います。<br><b>■ 戦闘の流れ</b><br>8×8マスの戦場で戦います。自分のターンに「移動（1回・3歩ぶん）」と「カード（⚡${CFG.energy}・手札${CFG.handSize}枚）」を好きな順で使い、「ターン終了」で敵が動きます。<br><b>■ 行動予告</b><br>敵の頭上に次の行動が出ます。敵をタップすると、攻撃が届く範囲（オレンジ）が見られます。<br><b>■ 向き</b><br>側面から：HP×${CFG.dirHp.side}・体勢×${CFG.dirPs.side}／背後から：HP×${CFG.dirHp.back}・体勢×${CFG.dirPs.back}。地面の矢印が向きです。移動や攻撃で向きが変わり、「向き」でいつでも変えられます。仲間と敵をはさむと1段階有利になります。<br><b>■ 体勢値（黄色のバー）</b><br>0になると「体勢崩し」：次の行動を1回休み、受けるダメージ×${CFG.brokenDmg}。休んだら全回復します。棍棒は体勢を崩しやすく、弓や投石は崩しにくいです。<br><b>■ 地形</b><br>${Object.values(TER).map(t=>t.n+'：'+t.d).join('<br>')}<br><b>■ 戦闘不能と救助</b><br>HP0で戦闘不能。となりのマスの仲間が「救助」（⚡${CFG.rescueCost}）を選び、次のターン開始まで攻撃を受けなければ復帰します。${CFG.rescueTurns}ターン以内に救助されないか、全員が倒れると拠点へ強制帰還です（1人の時は戦闘不能＝強制帰還）。<br><b>■ 操作</b><br>タッチ・マウス：タップ／クリック<br>キーボード：矢印キーで移動、Enter/Zで決定、Esc/Xで戻る、Eでターン終了、Cでマスを調べる、Q/Wで対象・キャラ切り替え、Mでメニュー<br>コントローラー：十字キー/スティックで移動（戦場では上＝奥）、Aで決定、Bで戻る、Yでターン終了、Xでマスを調べる、LB/RBで対象・キャラ切り替え、STARTでメニュー</div>`);
+ if(o.k==='help')return dlg('遊び方',`<div class="help"><b>■ 探索</b><br>フィールドを8方向に歩きます（画面をなぞる／方向キー・WASD／スティック）。光っている素材に近づいて「採集」。歩いていると敵に出会い、拠点から遠いほど敵が増えます。⚠️強敵と👑ボスは決まった場所にいます。右上の小さな地図と「地図」で歩いた所を確認できます。<br><b>■ 帰還</b><br>メニュー（☰）の「拠点へ帰還する」で、荷物を倉庫に持ち帰れます。全員が倒れると強制帰還になり、荷物の${CFG.loseBag*100}%を失います。<br><b>■ 戦闘の流れ</b><br>8×8マスの戦場で戦います。自分のターンに「移動（1回・3歩ぶん）」と「カード（⚡${CFG.energy}・手札${CFG.handSize}枚）」を好きな順で使い、「ターン終了」で敵が動きます。<br><b>■ オートとスキップ</b><br>「🤖オート」を押すと、味方が自動で戦います（もう一度押すと手動に戻る）。弱い敵との戦闘では最初のターンに「⏩スキップ」が出て、少しダメージを受けるかわりにすぐ勝利できます（強敵・ボスは不可）。<br><b>■ 行動予告</b><br>敵の頭上に次の行動が出ます。敵をタップすると、攻撃が届く範囲（オレンジ）が見られます。<br><b>■ 向き</b><br>側面から：HP×${CFG.dirHp.side}・体勢×${CFG.dirPs.side}／背後から：HP×${CFG.dirHp.back}・体勢×${CFG.dirPs.back}。地面の矢印が向きです。移動や攻撃で向きが変わり、「向き」でいつでも変えられます。仲間と敵をはさむと1段階有利になります。<br><b>■ 体勢値（黄色のバー）</b><br>0になると「体勢崩し」：次の行動を1回休み、受けるダメージ×${CFG.brokenDmg}。休んだら全回復します。棍棒は体勢を崩しやすく、弓や投石は崩しにくいです。<br><b>■ 地形</b><br>${Object.values(TER).map(t=>t.n+'：'+t.d).join('<br>')}<br><b>■ 戦闘不能と救助</b><br>HP0で戦闘不能。となりのマスの仲間が「救助」（⚡${CFG.rescueCost}）を選び、次のターン開始まで攻撃を受けなければ復帰します。${CFG.rescueTurns}ターン以内に救助されないか、全員が倒れると拠点へ強制帰還です（1人の時は戦闘不能＝強制帰還）。<br><b>■ 操作</b><br>タッチ・マウス：タップ／クリック<br>キーボード：矢印キーで移動、Enter/Zで決定、Esc/Xで戻る、Eでターン終了、Cでマスを調べる、Q/Wで対象・キャラ切り替え、Mでメニュー<br>コントローラー：十字キー/スティックで移動（戦場では上＝奥）、Aで決定、Bで戻る、Yでターン終了、Xでマスを調べる、LB/RBで対象・キャラ切り替え、STARTでメニュー</div>`);
  if(o.k==='map')return dlg('🗺 地図',`<canvas id="mapcv"></canvas><div class="small">🟡自分　⚪拠点　🔴強敵　🟣ボス　白い点＝採集ポイント<br>歩いた所のまわりが地図に書き込まれます。</div>`);
  if(o.k==='bag')return dlg('🎒 荷物',`<div>${matList(G.fd&&G.fd.bag)}</div><div class="small">倉庫：${matList(G.world.store)}<br>荷物は拠点へ帰還すると倉庫に入ります。</div>`);
  if(o.k==='menu')return dlg('メニュー',`<div class="menu">${G.phase==='field'?btn('ret','🏠 拠点へ帰還する',{c:'pri'}):''}${btn('tBgm','♪ BGM '+(META.bgm?'ON':'OFF'))}${btn('tSe','🔊 効果音 '+(META.se?'ON':'OFF'))}${btn('ovHelp','遊び方')}${btn('reload','更新（再読み込み）')}${btn('leave','タイトルへ戻る')}</div><div class="small">v${VERSION}</div>`);
@@ -138,6 +138,7 @@ const ACT={
  face(){const p=me();ui.sel=null;if(ui.mode==='face'){ui.mode=null;return}ui.mode='face';ui.cur={x:p.x,y:p.y}},
  look(){const p=me();ui.sel=null;if(ui.mode==='look'){ui.mode=null;return}ui.mode='look';if(!unitAt(ui.cur.x,ui.cur.y))ui.cur={x:p.x,y:p.y}},
  rescue(){const p=me(),t=G.players.find(q=>q.down&&!q.out&&dist(p,q)===1);if(t)sendAct({t:'rescue',p:t.id})},
+ auto(){META.auto=META.auto?0:1;saveMeta();ui.mode=null;ui.sel=null},skip(){sendAct({t:'skip'})},
  end(){const p=me();ui.mode=null;ui.sel=null;if(p&&!p.ended)sendAct({t:'end'})},
  rwSel(i){ui.pick=+i;sfx('sel')},rwSkip(){sendAct({t:'pick',i:-1});ui.pick=null},rwTake(){if(ui.pick==null)return;sendAct({t:'pick',i:ui.pick});ui.pick=null},
 };
@@ -146,5 +147,7 @@ function doClick(el){const a=el.closest('[data-a]');if(!a)return;auInit();if(a.c
 document.addEventListener('click',e=>{if(e.target.id==='nm'||e.target.id==='cv'||e.target.id==='fv')return;doClick(e.target)});
 document.addEventListener('pointerdown',e=>{if(e.pointerType)setMode(false);auInit()});
 document.addEventListener('change',e=>{if(e.target.id==='nm')saveName()});
+// オートバトル：味方のターンの間、順番に1つずつ行動させる
+setInterval(()=>{if(!G||scr!=='game'||G.phase!=='combat'||!META.auto||ui.ov||G.cb.ph!=='p')return;const q=G.players.find(x=>!x.ended&&!x.down&&!x.out);if(!q)return;ui.pid=q.id;const a=autoAct(q);if(!a||act(q.id,a))act(q.id,{t:'end'})},CFG.autoStep);
 window.addEventListener('resize',()=>{if(scr==='game')render()});
 render();
